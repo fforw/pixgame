@@ -4592,6 +4592,11 @@ power-assert@^1.6.1:
     universal-deep-strict-equal "^1.2.1"
     xtend "^4.0.0"
 
+prando@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/prando/-/prando-5.1.1.tgz#91b0efc6a06ce000a1dd6929306dc6f2c173a842"
+  integrity sha512-KstlnYTOUs+3DJWaVZGmdpBh9Y2fHhPPB+BkxfZ7ZWb8qqUfDxBz/QC4pXNwGEYWtkjMaCuBWDPDUQ5BZQksEA==
+
 prepend-http@^1.0.0:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/prepend-http/-/prepend-http-1.0.4.tgz#d4f4562b0ce3696e41ac52d0e002e57a635dc6dc"
@@ -5100,6 +5105,11 @@ signal-exit@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
   integrity sha1-tf3AjxKH6hF4Yo5BXiUTK3NkbG0=
+
+simplex-noise@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/simplex-noise/-/simplex-noise-2.4.0.tgz#81b3458fb22dccc3bc8dd9a977c73797f86f523a"
+  integrity sha512-OjyDWm/QZjVbMrPxDVi9b2as+SeNn9EBXlrWVRlFW+TSyWMSXouDryXkQN0vf5YP+QZKobrmkvx1eQYPLtuqfw==
 
 slash@^1.0.0:
   version "1.0.0"

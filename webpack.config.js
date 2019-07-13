@@ -20,7 +20,8 @@ if (!fs.existsSync(JS_OUTPUT_DIRECTORY))
 module.exports = {
     mode: process.env.NODE_ENV,
     entry: {
-        "main": "./src/index.js"
+        "main": "./src/index.js",
+        "height": "./src/index-height.js"
     },
 
     devtool: "source-map",
@@ -45,9 +46,9 @@ module.exports = {
 
         new HtmlWebpackPlugin({
             inject: "body",
-            chunks: ["vendors", "test"],
+            chunks: ["vendors", "height"],
             template: "src/template.html",
-            filename: "test.html"
+            filename: "height.html"
         }),
 
         new MiniCssExtractPlugin({
