@@ -1,5 +1,6 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const path = require("path");
 const fs = require("fs");
@@ -59,8 +60,14 @@ module.exports = {
             "__DEV": !PRODUCTION,
             "__STATS": STATS,
             "process.env.NODE_ENV": JSON.stringify(PRODUCTION ? "production" : "development")
-        })
+        }),
 
+        new webpack.ProvidePlugin({
+            PIXI: 'pixi.js'
+        }),
+        new CopyWebpackPlugin([
+            { from: 'atlas/atlas-*' }
+        ])
     ],
 
     module: {
@@ -83,7 +90,16 @@ module.exports = {
             },
 
             {
-                test: /\.(png|jpg|gif)$/,
+                test: /atlas-[0-9]+.json$/,
+                use: [
+                    {
+                        loader: "json-loader",
+                        options: {}
+                    }
+                ]
+            },
+            {
+                test: /\.(png|jpg|gif|)$/,
                 use: [
                     {
                         loader: "file-loader",

@@ -18,15 +18,19 @@
         "@babel/preset-env": "^7.5.4",
         "@babel/preset-react": "^7.0.0",
         "@babel/register": "^7.4.4",
+        "@mapbox/shelf-pack": "^3.2.0",
         "babel-loader": "^8.0.6",
         "babel-plugin-espower": "^3.0.1",
         "babel-plugin-transform-imports": "^2.0.0",
+        "copy-webpack-plugin": "^5.0.3",
         "cross-env": "^5.2.0",
         "css-loader": "^3.0.0",
         "html-webpack-plugin": "^3.2.0",
+        "jimp": "^0.6.4",
         "mini-css-extract-plugin": "^0.7.0",
         "mocha": "^6.1.4",
         "power-assert": "^1.6.1",
+        "shelf-pack": "^2.0.1",
         "shelljs": "^0.8.3",
         "webpack": "^4.35.3",
         "webpack-cli": "^3.3.5"
@@ -35,7 +39,8 @@
         "build": "node tooling/clean.js ; cross-env NODE_ENV=production webpack -p",
         "build-dev": "node tooling/clean.js ; cross-env NODE_ENV=development webpack --debug --output-pathinfo",
         "watch": "node tooling/clean.js ; cross-env NODE_ENV=development webpack --debug --output-pathinfo -w",
-        "test": "cross-env NODE_ENV=development BABEL_ENV=test mocha --require @babel/register -R spec test/"
+        "test": "cross-env NODE_ENV=development BABEL_ENV=test mocha --require @babel/register -R spec test/",
+        "build-atlas": "node tooling/build-atlas.js"
     },
     "browserslist": [
         "> 0.5%",

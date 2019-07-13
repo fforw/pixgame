@@ -6,3 +6,14 @@ body{
     background: #000;
     color: #ccc;
 }
+
+
+.loading
+{
+    width: 400px;
+    height: 100vh;
+    text-align: center;
+    margin: 48vh auto;
+    font-family: monospace;
+    font-size: 24px;
+}
