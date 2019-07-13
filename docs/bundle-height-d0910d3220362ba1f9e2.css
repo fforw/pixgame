@@ -1,0 +1,22 @@
+
+body{
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+    color: #ccc;
+}
+
+
+.loading
+{
+    width: 400px;
+    height: 100vh;
+    text-align: center;
+    margin: 48vh auto;
+    font-family: monospace;
+    font-size: 24px;
+}
+
+
+/*# sourceMappingURL=bundle-height-d0910d3220362ba1f9e2.css.map*/

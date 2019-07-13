@@ -1,0 +1,220 @@
+{
+    "frames": {
+        "dirt.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        },
+        "dirt2.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 16,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        },
+        "dirt3.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 32,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        },
+        "grass.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 48,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        },
+        "grass2.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 64,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        },
+        "grass3.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 80,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        },
+        "sand.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 96,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        },
+        "sand2.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 112,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        },
+        "sand3.png": {
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            },
+            "sourceSize": {
+                "w": 16,
+                "h": 16
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "frame": {
+                "x": 128,
+                "y": 0,
+                "w": 16,
+                "h": 16
+            }
+        }
+    }
+}

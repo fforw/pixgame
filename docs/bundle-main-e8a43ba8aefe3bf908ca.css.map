@@ -1,1 +1,0 @@
-{"version":3,"sources":["webpack://Game/./src/style.css"],"names":[],"mappings":";AACA;AACA;AACA;AACA;AACA;AACA;AACA","file":"bundle-main-e8a43ba8aefe3bf908ca.css","sourcesContent":["\nbody{\n    margin: 0;\n    padding: 0;\n    overflow: hidden;\n    background: #000;\n    color: #ccc;\n}\n"],"sourceRoot":""}
