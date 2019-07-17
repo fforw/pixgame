@@ -23,7 +23,7 @@ function readAtlasJSON(path)
 {
     if (fs.existsSync(path))
     {
-        return fs.readFileSync(path, "UTF-8");
+        return JSON.parse(fs.readFileSync(path, "UTF-8"));
     }
     else
     {
@@ -38,6 +38,35 @@ function reduceMax(a,b)
 }
 
 
+/**
+ * Allows the use of absolute pixel pivots in the template which are turned into fractional pivots
+ * @param frame
+ * @return {object} frame with fractional pivot
+ */
+function pixelPivot(frame, w, h)
+{
+    if (!frame)
+    {
+        return null;
+    }
+
+    const { x, y } = frame.pivot;
+
+    if (x > 1)
+    {
+
+        frame.pivot.x  /= w
+    }
+    if (y > 1)
+    {
+
+        frame.pivot.y  /= h
+    }
+
+    return frame;
+}
+
+
 function generateAtlas(atlasPath, index)
 {
     const curr = path.join(__dirname, atlasPath);
@@ -45,6 +74,9 @@ function generateAtlas(atlasPath, index)
     console.log("Generate for", curr);
 
     const predefinedAtlas = readAtlasJSON(path.join(curr, "atlas.json"));
+
+    console.log("Template = ", predefinedAtlas)
+
     const promises = [];
 
     const sprite = new ShelfPack(1024, 1024);
@@ -80,7 +112,7 @@ function generateAtlas(atlasPath, index)
 
         console.log("Actual atlas dimensions: ", width, height);
 
-        Jimp.create(width, height).then(atlasImg => {
+        Jimp.create(width, height, 0x00000000).then(atlasImg => {
 
             const atlas = {frames: {}}
 
@@ -108,7 +140,7 @@ function generateAtlas(atlasPath, index)
                         y: 0.5
                     },
                     // ... potentially overridden by values from the atlas template
-                    ...predefinedAtlas.frames[bin.id],
+                    ... pixelPivot(predefinedAtlas.frames[bin.id], w, h),
 
                     // ... but not "frame"
                     frame: {

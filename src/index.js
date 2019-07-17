@@ -1,11 +1,54 @@
-// noinspection ES6UnusedImports
-import STYLES from "./style.css"
-// noinspection ES6UnusedImports
-
 import * as PIXI from "pixi.js"
 import "./pixi-tilemap"
+// noinspection ES6UnusedImports
+import STYLES from "./style.css"
+import WorldMap, { MARKER, BLOCKED } from "./WorldMap";
 
-import SimplexNoise from "simplex-noise"
+
+const textures = [
+    "water.png",
+    "water2.png",
+    "water3.png",
+    "sand.png",
+    "sand2.png",
+    "sand3.png",
+    "grass.png",
+    "grass2.png",
+    "grass3.png",
+    "dirt.png",
+    "dirt2.png",
+    "dirt3.png",
+    "rock.png",
+    "rock2.png",
+    "rock3.png",
+    "woods.png",
+    "woods2.png",
+    "woods.png",
+    "woods2.png",
+    "river.png",
+    "river2.png",
+    "river3.png",
+    "marker.png",
+    "marker2.png",
+    "marker3.png",
+    "bunny.png"
+];
+const thingTextures = [
+    "none.png",
+    "marker2.png", //null,  
+    "large-tree.png",
+    "large-tree2.png",
+    "small-tree.png",
+    "small-tree2.png",
+    "small-tree3.png",
+    "plant.png",
+    "plant2.png",
+    "plant3.png",
+    "boulder.png",
+    "boulder2.png",
+    "marker3.png"
+];
+
 
 function determineScale(width)
 {
@@ -23,15 +66,8 @@ function determineScale(width)
     return scale;
 }
 
-const noise = new SimplexNoise();
 
 let loading;
-
-const NOISE_SCALE = 0.03;
-const NOISE_SCALE2 = 0.2;
-
-const WATER_LINE = 0;
-const SAND_LINE = WATER_LINE + (1 - WATER_LINE) * 0.2;
 
 window.onload = () => {
 
@@ -48,31 +84,31 @@ window.onload = () => {
 
 let groundTiles;
 
-const GRASS = [
-    "grass.png",
-    "grass2.png",
-    "grass3.png"
-];
-const DIRT = [
-    "dirt.png",
-    "dirt2.png",
-    "dirt3.png"
-];
-const SAND = [
-    "sand.png",
-    "sand2.png",
-    "sand3.png"
-];
+let map;
 
-const WATER = [
-    "water.png",
-    "water2.png",
-    "water3.png"
-];
+const START_X = 1029 * 16;
+const START_Y = 1197 * 16;
 
+let posX = START_X;
+let posY = START_Y;
+let dx = 0;
+let dy = 0;
+let keyX = 0;
+let keyY = 0;
+
+const ACCELERATION = 0.5;
+const SPEED_LIMIT = 12;
 
 function setup(loader, resources)
 {
+    console.log("setup", resources);
+
+    map = WorldMap.generate(2048, "floppy-disk");
+
+    map.tiles[0] = MARKER;
+
+    const atlasJSON = resources["atlas/atlas-0.json"].data;
+    console.log("ATLAS", atlasJSON);
 
     loading.parentNode.removeChild(loading);
 
@@ -80,95 +116,213 @@ function setup(loader, resources)
 
     const scale = determineScale(window.innerWidth);
 
-    const width = window.innerWidth / scale;
-    const height = window.innerHeight / scale;
+    const width = (window.innerWidth / scale)|0;
+    const height = (window.innerHeight / scale)|0;
+
+    const halfWidth = width/2;
+    const halfHeight = height/2;
+
+    const widthInTiles = Math.ceil(width / 16) + 5;
+    const heightInTiles = Math.ceil(height / 16) + 9;
 
     const app = new PIXI.Application({
         width: width,
         height: height,
-        backgroundColor: 0x1099bb,
+        backgroundColor: 0x111111,
         resolution: (window.devicePixelRatio || 1) * scale,
     });
     document.body.appendChild(app.view);
 
 
-    function drawTiles()
+    function drawTiles(map)
     {
-        // The +5 gives us a buffer around the current player
-        const widthInTiles = (width / 16) | 0;
-        const heightInTiles = (height / 16) | 0;
+        groundTiles.clear();
 
-        for (let y = 0; y < heightInTiles; y++)
+        const { sizeMask, fineMask } = map;
+
+        let xOffset = (posX - halfWidth) & fineMask;
+        let yOffset = (posY - halfHeight)& fineMask;
+
+        let screenX = -32 + -(xOffset & 15);
+        let screenY = -32 + -(yOffset & 15);
+
+        const mapX = ( -2 + (xOffset >> 4)) & sizeMask;
+        const mapY = ( -2 + (yOffset >> 4)) & sizeMask;
+
+        //console.log("Map pos", mapX, mapY, sizeMask);
+        //console.log({screenX, screenY, txSteps, tySteps, mapX, mapY})
+
+        const yPosInTiles = (posY >> 4)|0;
+
+        // DRAW TILES
+        for (let y = 0 ; y < heightInTiles; y++)
         {
             for (let x = 0; x < widthInTiles; x++)
             {
+                const tile = map.read((mapX + x) & sizeMask, (mapY + y) & sizeMask);
+                const texture = textures[tile];
+                const { pivot, frame } = atlasJSON.frames[texture];
 
-                const v = noise.noise2D(x * NOISE_SCALE,  y * NOISE_SCALE);
-                const v2 = noise.noise2D(y * NOISE_SCALE2,  x * NOISE_SCALE2);
+                groundTiles.addFrame(
+                    texture,
+                    screenX + (x << 4) - ((pivot.x * frame.w)|0),
+                    screenY + (y << 4) - ((pivot.y * frame.h)|0)
+                );
 
-                let texture;
-                if (v < WATER_LINE)
-                {
-                    texture = WATER[(Math.random() * WATER.length) | 0];
-                }
-                else if (v < SAND_LINE)
-                {
-                    texture = SAND[(Math.random() * SAND.length) | 0];
-                }
-                else
-                {
-                    if (v2 > -0.4)
-                    {
-                        texture = GRASS[(Math.random() * GRASS.length) | 0];
-                    }
-                    else
-                    {
-                        texture = DIRT[(Math.random() * DIRT.length) | 0];
-                    }
-                }
-
-                groundTiles.addFrame(texture, x * 16, y * 16);
             }
         }
+
+        for (let y = 0 ; y < heightInTiles; y++)
+        {
+            if (((mapY + y) & sizeMask) === ((yPosInTiles + 1) & sizeMask) && (posY & 15) < 8)
+            {
+                groundTiles.addFrame(
+                    "bunny.png",
+                    halfWidth,
+                    halfHeight - 20
+                );
+            }
+
+            for (let x = 0; x < widthInTiles; x++)
+            {
+                const thing = map.getThing((mapX + x) & sizeMask, (mapY + y) & sizeMask);
+
+                if (thing > 0)//BLOCKED)
+                {
+                    const texture = thingTextures[thing];
+                    if (!texture)
+                    {
+                        throw new Error("No texture for " + thing)
+                    }
+                    //console.log({texture, x: screenX + x * 16, y:screenY + y * 16})
+
+
+                    const { pivot, frame } = atlasJSON.frames[texture];
+                    groundTiles.addFrame(
+                        texture,
+                        screenX + (x << 4) - (pivot.x * frame.w)|0,
+                        screenY + (y << 4) - (pivot.y * frame.h)|0
+                    );
+                }
+            }
+
+
+            if (((mapY + y) & sizeMask) === ((yPosInTiles + 1) & sizeMask) && (posY & 15) >= 8)
+            {
+                groundTiles.addFrame(
+                    "bunny.png",
+                    halfWidth,
+                    halfHeight - 20
+                );
+            }
+        }
+
+        groundTiles.addFrame(
+            "bunny-outline.png",
+            halfWidth,
+            halfHeight - 20
+        );
     }
 
-
-    // const container = new PIXI.Container();
-    //
-    // app.stage.addChild(container);
-    //
-    // // Create a new texture
-    // const texture = resources[ATLAS].texture;
-    //
-    // // Create a 5x5 grid of bunnies
-    // for (let i = 0; i < 25; i++)
-    // {
-    //     const bunny = new PIXI.Sprite(texture);
-    //     bunny.anchor.set(0.5);
-    //     bunny.x = (i % 5) * 40;
-    //     bunny.y = Math.floor(i / 5) * 40;
-    //     container.addChild(bunny);
-    // }
-    //
-    // // Move container to the center
-    // container.x = app.screen.width / 2;
-    // container.y = app.screen.height / 2;
-    //
-    // // Center bunny sprite in local container coordinates
-    // container.pivot.x = container.width / 2;
-    // container.pivot.y = container.height / 2;
-
-    // Create our tile map based on the ground texture
-
+    //PIXI.tilemap.Constant.use32bitIndex = true;
     groundTiles = new PIXI.tilemap.CompositeRectTileLayer(0, PIXI.utils.TextureCache["atlas/atlas-0.json_image"]);
-    drawTiles();
+    drawTiles(map);
 
     app.stage.addChild(groundTiles);
 
-    // // Listen for animate update
-    // app.ticker.add((delta) => {
-    //     // rotate the container!
-    //     // use delta to create frame-independent transform
-    //     container.rotation -= 0.01 * delta;
-    // });
+
+
+    app.ticker.add((delta) => {
+        // rotate the container!
+        // use delta to create frame-independent transform
+        //container.rotation -= 0.01 * delta;
+
+        if (keyX)
+        {
+            dx += keyX * ACCELERATION;
+            if (Math.abs(dx) > SPEED_LIMIT)
+            {
+                dx = Math.sign(dx) * SPEED_LIMIT;
+            }
+        }
+        else
+        {
+            dx *= 0.5;
+        }
+        if (keyY)
+        {
+            dy += keyY * ACCELERATION;
+            if (Math.abs(dy) > SPEED_LIMIT)
+            {
+                dy = Math.sign(dy) * SPEED_LIMIT;
+            }
+        }
+        else
+        {
+            dy *= 0.5;
+        }
+
+        posX = (posX + dx * delta) & map.fineMask;
+        posY = (posY + dy * delta) & map.fineMask;
+        
+        drawTiles(map);
+
+        //console.log(posX);
+    });
+
+
+    window.addEventListener("keydown", ev => {
+        const keyCode = ev.keyCode;
+
+        //console.log("keyCode = ", keyCode);
+
+        switch(keyCode)
+        {
+            case 36:
+                posX = START_X;
+                posY = START_Y;
+                break;
+            case 35:
+                posX = 0;
+                posY = 0;
+                break;
+            case 38:
+            case 87:
+                keyY = -1;
+                break;
+            case 37:
+            case 65:
+                keyX = -1;
+                break;
+            case 40:
+            case 83:
+                keyY = 1;
+                break;
+            case 39:
+            case 68:
+                keyX = 1;
+                break;
+        }
+    }, true);
+    window.addEventListener("keyup", ev => {
+        const keyCode = ev.keyCode;
+
+        //console.log("keyCode = ", keyCode);
+
+        switch(keyCode)
+        {
+            case 38:
+            case 87:
+            case 40:
+            case 83:
+                keyY = 0;
+                break;
+            case 37:
+            case 65:
+            case 39:
+            case 68:
+                keyX = 0;
+                break;
+        }
+    }, true);
 }

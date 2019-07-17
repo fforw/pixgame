@@ -1,0 +1,46 @@
+{
+    "frames": {
+        "large-tree.png": {
+            "pivot": {
+                "x": 56,
+                "y": 106
+            }
+        },
+        "large-tree2.png": {
+            "pivot": {
+                "x": 51,
+                "y": 118
+            }
+        },
+        "small-tree.png": {
+            "pivot": {
+                "x": 16,
+                "y": 32
+            }
+        },
+        "small-tree2.png": {
+            "pivot": {
+                "x": 15,
+                "y": 32
+            }
+        },
+        "small-tree3.png": {
+            "pivot": {
+                "x": 12,
+                "y": 24
+            }
+        },
+        "boulder.png": {
+            "pivot": {
+                "x": 23,
+                "y": 31
+            }
+        },
+        "boulder2.png": {
+            "pivot": {
+                "x": 9,
+                "y": 7
+            }
+        }
+    }
+}
