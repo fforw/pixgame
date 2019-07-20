@@ -920,6 +920,99 @@ function planCities(map, rivers)
 function planRoads(map, cities)
 {
 
+    console.log("planRoads", cities);
+
+    const squareStar = new SquareStar.js();
+    squareStar.setGrid(map.things);
+    squareStar.enableSync();
+    squareStar.setAcceptableTiles([
+        0,
+        EMPTY,
+        _RIVER,
+        _WOODS,
+        PATH,
+        PLANT,
+        PLANT_2,
+        PLANT_3,
+        DOT
+    ]);
+
+    squareStar.setTileCost(PATH, .01);
+    squareStar.setTileCost(_WOODS, 5);
+    squareStar.setTileCost(_RIVER, 30);
+
+    const length = cities.length;
+
+    let count = 0;
+    for (let i = 0; i < length; i++)
+    {
+
+        const minPerSector = [
+            {distance: Infinity},
+            {distance: Infinity},
+            {distance: Infinity},
+            {distance: Infinity}
+        ];
+
+        const cityA = cities[i];
+        const { centerX : x0, centerY : y0 } = cityA;
+
+        for (let j = length - 1; j > i; j--)
+        {
+            const cityB = cities[j];
+            const { centerX : x1, centerY : y1 } = cityB;
+
+            const yDelta = y1 - y0;
+            const xDelta = x1 - x0;
+            const sector = (Math.atan2(yDelta, xDelta) * 4 / TAU) & 3;
+
+
+            const dist = xDelta * xDelta + yDelta * yDelta;
+
+            if (dist < minPerSector[sector].distance)
+            {
+                minPerSector[sector].distance  = dist;
+                minPerSector[sector].city  = cityB;
+            }
+        }
+
+        for (let j = 0; j < minPerSector.length; j++)
+        {
+            const entry = minPerSector[j];
+            if (entry.city)
+            {
+                squareStar.findPath(
+                    cityA.centerX,
+                    cityA.centerY,
+                    entry.city.centerX,
+                    entry.city.centerY,
+                    path => {
+
+                        if (path)
+                        {
+                            console.log("FOUND: length = ", path.length);
+                            for (let i = 0; i < path.length; i++)
+                            {
+                                const {x, y} = path[i];
+                                map.write(x, y, PATH);
+                            }
+
+                            count++;
+                        }
+                        else
+                        {
+                            console.log("NOT FOUND");
+                        }
+                        //console.log("PATH", path)
+                    }
+                );
+                squareStar.calculate()
+            }
+        }
+    }
+
+    console.log(count, "roads");
+
 }
 
 

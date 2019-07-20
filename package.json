@@ -12,6 +12,7 @@
         "react": "^16.8.6",
         "react-dom": "^16.8.6",
         "simplex-noise": "^2.4.0",
+        "squarestarjs": "^0.4.3"
     },
     "devDependencies": {
         "bin-pack": "^1.0.2",
