@@ -2,7 +2,7 @@ const path = require("path");
 const fs = require("fs");
 
 const Jimp = require("jimp");
-const ShelfPack = require('@mapbox/shelf-pack');
+const pack = require('bin-pack');
 
 const ATLASES = [
     "../atlas/src"
@@ -79,8 +79,6 @@ function generateAtlas(atlasPath, index)
 
     const promises = [];
 
-    const sprite = new ShelfPack(1024, 1024);
-
     fs.readdirSync(curr).forEach(file => {
 
         if (endsWith(file, ".png"))
@@ -103,18 +101,22 @@ function generateAtlas(atlasPath, index)
 
     Promise.all(promises).then(images => {
 
-        sprite.pack(images, {inPlace: true});
+        const result = pack(images, {
+            inPlace: true
+        });
+
+        const { width, height }  =result;
 
         //console.log("IMAGES", images);
 
-        const width = images.map(img => +img.x + img.width).reduce(reduceMax, 0);
-        const height = images.map(img => +img.y + img.height).reduce(reduceMax, 0);
+        // const width = images.map(img => +img.x + img.width).reduce(reduceMax, 0);
+        // const height = images.map(img => +img.y + img.height).reduce(reduceMax, 0);
 
         console.log("Actual atlas dimensions: ", width, height);
 
         Jimp.create(width, height, 0x00000000).then(atlasImg => {
 
-            const atlas = {frames: {}}
+            const atlas = {frames: {}};
 
             images.forEach(function (bin) {
 
