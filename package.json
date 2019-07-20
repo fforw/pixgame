@@ -5,13 +5,13 @@
     "license": "Apache-2.0",
     "private": true,
     "dependencies": {
+        "performance-now": "latest",
         "pixi.js": "^5.0.4",
         "prando": "^5.1.1",
         "raf": "^3.4.1",
         "react": "^16.8.6",
         "react-dom": "^16.8.6",
         "simplex-noise": "^2.4.0",
-        "performance-now": "latest"
     },
     "devDependencies": {
         "bin-pack": "^1.0.2",

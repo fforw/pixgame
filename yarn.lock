@@ -3089,6 +3089,11 @@ he@1.2.0, he@1.2.x:
   resolved "https://registry.yarnpkg.com/he/-/he-1.2.0.tgz#84ae65fa7eafb165fddb61566ae14baf05664f0f"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
+heap@0.2.6:
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/heap/-/heap-0.2.6.tgz#087e1f10b046932fc8594dd9e6d378afc9d1e5ac"
+  integrity sha1-CH4fELBGky/IWU3Z5tN4r8nR5aw=
+
 hmac-drbg@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/hmac-drbg/-/hmac-drbg-1.0.1.tgz#d2745701025a6c775a6c545793ed502fc0c649a1"
@@ -4351,7 +4356,7 @@ pbkdf2@^3.0.3:
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
 
-performance-now@^2.1.0:
+performance-now@^2.1.0, performance-now@latest:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
   integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
@@ -5208,6 +5213,13 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
+
+squarestarjs@^0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/squarestarjs/-/squarestarjs-0.4.3.tgz#57ae8d0d130a4f8a38ffe88d1eea17596d418487"
+  integrity sha512-hPJELSH1v4OHiCZUAXZNZA533clw6WfLObWSZYZZhfDjLNOI1IG1srIrTrorTlLT9fM+v/M5cjbtt1RZOd37oQ==
+  dependencies:
+    heap "0.2.6"
 
 ssri@^6.0.1:
   version "6.0.1"

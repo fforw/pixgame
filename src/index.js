@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js"
 import "./pixi-tilemap"
 // noinspection ES6UnusedImports
 import STYLES from "./style.css"
-import WorldMap, { MARKER, BLOCKED } from "./WorldMap";
+import WorldMap, { MARKER, BLOCKED, HOUSE } from "./WorldMap";
 
 
 const textures = [
@@ -31,11 +31,15 @@ const textures = [
     "marker.png",
     "marker2.png",
     "marker3.png",
-    "bunny.png"
+    "dirt.png"
 ];
 const thingTextures = [
-    "none.png",
-    "marker2.png", //null,  
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
     "large-tree.png",
     "large-tree2.png",
     "small-tree.png",
@@ -46,7 +50,9 @@ const thingTextures = [
     "plant3.png",
     "boulder.png",
     "boulder2.png",
-    "marker3.png"
+    "boulder3.png",
+    "house.png",
+    "dot.png"
 ];
 
 
@@ -86,7 +92,7 @@ let groundTiles;
 
 let map;
 
-const START_X = 1029 * 16;
+const START_X = 1025 * 16;
 const START_Y = 1197 * 16;
 
 let posX = START_X;
@@ -101,14 +107,15 @@ const SPEED_LIMIT = 12;
 
 function setup(loader, resources)
 {
-    console.log("setup", resources);
+    const atlasJSON = resources["atlas/atlas-0.json"].data;
+
+    //console.log("setup", resources);
 
     map = WorldMap.generate(2048, "floppy-disk");
 
     map.tiles[0] = MARKER;
 
-    const atlasJSON = resources["atlas/atlas-0.json"].data;
-    console.log("ATLAS", atlasJSON);
+    map.things[1193 * 2048 + 1023] = HOUSE;
 
     loading.parentNode.removeChild(loading);
 
@@ -118,6 +125,8 @@ function setup(loader, resources)
 
     const width = (window.innerWidth / scale)|0;
     const height = (window.innerHeight / scale)|0;
+
+    console.log({width, height})
 
     const halfWidth = width/2;
     const halfHeight = height/2;
@@ -187,22 +196,24 @@ function setup(loader, resources)
             {
                 const thing = map.getThing((mapX + x) & sizeMask, (mapY + y) & sizeMask);
 
-                if (thing > 0)//BLOCKED)
+                //if (thing > BLOCKED)
                 {
                     const texture = thingTextures[thing];
-                    if (!texture)
+                    if (texture)
                     {
-                        throw new Error("No texture for " + thing)
+                        const { pivot, frame } = atlasJSON.frames[texture];
+                        groundTiles.addFrame(
+                            texture,
+                            screenX + (x << 4) - (pivot.x * frame.w)|0,
+                            screenY + (y << 4) - (pivot.y * frame.h)|0
+                        );
+                    }
+                    else
+                    {
+//                        throw new Error("No texture for " + thing)
                     }
                     //console.log({texture, x: screenX + x * 16, y:screenY + y * 16})
 
-
-                    const { pivot, frame } = atlasJSON.frames[texture];
-                    groundTiles.addFrame(
-                        texture,
-                        screenX + (x << 4) - (pivot.x * frame.w)|0,
-                        screenY + (y << 4) - (pivot.y * frame.h)|0
-                    );
                 }
             }
 

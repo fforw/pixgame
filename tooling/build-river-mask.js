@@ -35,11 +35,11 @@ Jimp.read(path.join(__dirname, "../src/assets/river-mask.png")).then(img => {
                          (xNotNull ? (Math.sign(mx) > 0 ? " x + " : "x - ") + Math.abs(mx) : "x") ;
                     if (data[offset])
                     {
-                        s += "    things[" + offsetExpression + "] = BLOCKED;\n";
+                        s += "    things[" + offsetExpression + "] = EMPTY;\n";
                     }
                     else
                     {
-                        s += "    off = " + offsetExpression + "; TILE_TO_BASE_TILE[tiles[off]] !== WATER && ( tiles[off] = pickVariant(map, RIVER));\n";
+                        s += "    off = " + offsetExpression + "; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }\n";
                     }
 
                 }

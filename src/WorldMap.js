@@ -3,7 +3,9 @@ import "./pixi-tilemap"
 import SimplexNoise from "simplex-noise"
 import Prando from "prando"
 import now from "performance-now"
+import SquareStar from "squarestarjs"
 import flood from "./flood";
+
 
 const TAU = Math.PI * 2;
 
@@ -11,6 +13,9 @@ const N1 = 0.4;
 const N2 = 1.4;
 const N3 = 20;
 const N4 = 5;
+
+const RELATIVE_CITY_RADIUS = 0.034;
+const MIN_CITY_RATING = 2000;
 
 function clamp(v)
 {
@@ -48,20 +53,27 @@ export const RIVER3 = 21;
 export const MARKER = 22;
 export const MARKER2 = 23;
 export const MARKER3 = 24;
+export const PATH = 25;
 
 // things
-export const BLOCKED = 1;
-export const LARGE_TREE = 2;
-export const LARGE_TREE_2 = 3;
-export const SMALL_TREE = 4;
-export const SMALL_TREE_2 = 5;
-export const SMALL_TREE_3 = 6;
-export const PLANT = 7;
-export const PLANT_2 = 8;
-export const PLANT_3 = 9;
-export const BOULDER = 10;
-export const BOULDER_2 = 11;
-export const BLOCKED_MARKER = 12;
+export const EMPTY = 1;
+export const _WATER = 2;
+export const _RIVER = 3;
+export const _WOODS = 4;
+export const BLOCKED = 5;
+export const LARGE_TREE = 6;
+export const LARGE_TREE_2 = 7;
+export const SMALL_TREE = 8;
+export const SMALL_TREE_2 = 9;
+export const SMALL_TREE_3 = 10;
+export const PLANT = 11;
+export const PLANT_2 = 12;
+export const PLANT_3 = 13;
+export const BOULDER = 14;
+export const BOULDER_2 = 15;
+export const BOULDER_3 = 16;
+export const HOUSE = 17;
+export const DOT = 18;
 
 function calcWeightSum(array)
 {
@@ -104,6 +116,34 @@ const tileNames = [
     "MARKER",
     "MARKER2",
     "MARKER3"
+];
+
+const tileVillageRating = [
+    0,  // WATER
+    0,  // WATER2
+    0,  // WATER3
+    0.5,  // SAND
+    0.5,  // SAND2
+    0.5,  // SAND3
+    1,  // GRASS
+    1,  // GRASS2
+    1,  // GRASS3
+    1,  // DIRT
+    1,  // DIRT2
+    1,  // DIRT3
+    -2,  // ROCK
+    -2,  // ROCK2
+    -2,  // ROCK3
+    1,  // WOODS
+    1,  // WOODS2
+    1,  // WOODS3
+    1,  // WOODS4
+    0,  // RIVER
+    0,  // RIVER2
+    0,  // RIVER3
+    0,  // MARKER
+    0,  // MARKER2
+    0  // MARKER3
 ];
 
 const variants = {
@@ -172,14 +212,14 @@ function normalizeSpawnTable(table)
 }
 
 const spawnTable = normalizeSpawnTable({
-    [WATER] : false,
-    [SAND] :  [0, 500, BOULDER, 1, BOULDER_2, 1],
-    [GRASS] : [0, 1000, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 3, SMALL_TREE_3, 3, BOULDER, 1, BOULDER_2, 2],
-    [DIRT] :  [0, 1000, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 3, SMALL_TREE_3, 3, BOULDER, 1, BOULDER_2, 2],
-    [ROCK] :  [0, 4, BOULDER, 1, BOULDER_2, 1],
-    [WOODS] : [0, 150, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 5, SMALL_TREE_2, 5, SMALL_TREE_3, 5, PLANT, 1, PLANT_2, 1, PLANT_3, 1, BOULDER, 1, BOULDER_2, 2],
-    [WOODS2]: [0, 40, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 5, SMALL_TREE_2, 5, SMALL_TREE_3, 5, PLANT, 1, PLANT_2, 1, PLANT_3, 1, BOULDER, 1, BOULDER_2, 2],
-    [RIVER] : false
+    [WATER] : [_WATER, 1],
+    [SAND] :  [0, 500, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
+    [GRASS] : [0, 1000, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 3, SMALL_TREE_3, 3, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 2],
+    [DIRT] :  [0, 1000, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 3, SMALL_TREE_3, 3, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 2],
+    [ROCK] :  [BLOCKED, 4, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
+    [WOODS] : [_WOODS, 150, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 5, SMALL_TREE_2, 5, SMALL_TREE_3, 5, PLANT, 1, PLANT_2, 1, PLANT_3, 1, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 2],
+    [WOODS2]: [_WOODS, 40, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 5, SMALL_TREE_2, 5, SMALL_TREE_3, 5, PLANT, 1, PLANT_2, 1, PLANT_3, 1, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 2],
+    [RIVER] : [_RIVER, 1]
 });
 
 
@@ -224,6 +264,11 @@ export function isVariant(tile, base)
 
 function spawn(map, spawns)
 {
+    if (spawns.length < 4)
+    {
+        return spawns[0];
+    }
+
     let value = map.random.next();
     let pos = 1;
     do
@@ -238,11 +283,11 @@ function spawn(map, spawns)
 
 function spawnForBlock(map, mapOffset, baseTile)
 {
-    const { things, sizeMask } = map;
+    const { things, size, sizeMask } = map;
 
     if (things[mapOffset] !== 0)
     {
-        console.log("Skip spawning on ", things[mapOffset])
+        console.log("Skip spawning on ", things[mapOffset]);
         return;
     }
 
@@ -279,7 +324,7 @@ function spawnForBlock(map, mapOffset, baseTile)
                     //console.log("Block for large tree", mapOffset)
                 }
             }
-            else if (thing === BOULDER)
+            else if (thing === BOULDER || thing === BOULDER_3)
             {
                 const prevOffset = (mapOffset - 1) & sizeMask;
                 const nextOffset = (mapOffset + 1) & sizeMask;
@@ -509,7 +554,8 @@ function jitter(map, filtered, amount = 8)
         {
             multis.push(
                 {
-                    ...probe,
+                    ... probe,
+                    points: [],
                     x: (probe.x - amount - yOff) | 0,
                     y: (probe.y - amount + xOff) | 0
                 }
@@ -652,6 +698,53 @@ function flow(map, probe)
 }
 
 
+function findMean(springs)
+{
+    const last = springs.length - 1;
+    const mid = last / 2;
+    if (mid % 1)
+    {
+        return springs[(mid | 0)].points.length + springs[(mid | 0) + 1].points.length / 2;
+    }
+    else
+    {
+        return springs[(mid | 0)].points.length;
+    }
+}
+
+
+/**
+ * Filters only the springs that are at least twice the spring mean length.
+ *
+ * @param springs   springs
+ * @return {*}
+ */
+function findLongRivers(map, springs)
+{
+    // we are roughly sorted, but not perfectly
+    springs.sort((a,b) => a.points.length - b.points.length);
+
+    const last = springs.length - 1;
+
+    const mean = findMean(springs);
+    const longRivers = springs.filter(s => s.points.length > mean * 2);
+
+    console.log("Min spring length", springs[0].points.length);
+    console.log("Mean spring length", mean);
+    console.log("Max spring length", springs[last].points.length);
+
+    //console.log(longRivers);
+
+    return longRivers
+
+}
+
+
+function getRiverWidth(index)
+{
+    return Math.min(8, index * 0.008) | 0;
+}
+
 
 function drawRivers(map)
 {
@@ -690,25 +783,144 @@ function drawRivers(map)
     }
     console.log("Stopped flowing after ", i, " iterations");
 
+
     for (let i = 0; i < springs.length; i++)
     {
         const { points } = springs[i];
 
         for (let j = 0; j < points.length; j += 2)
         {
-
-            const width = Math.min(8, j * 0.004)|0;
-            flood(map, points[j], points[j + 1], width);
+                const width = getRiverWidth(j);
+                flood(map, points[j], points[j + 1], width);
         }
     }
 
+    return springs;
+}
 
-    for (let i = 0; i < springs.length; i++)
+
+function findNonRiverTile(map, x, y)
+{
+    let minDistance = Infinity;
+    let px, py, mdx, mdy;
+    for (let i = 0; i < directions.length; i += 2)
     {
-        console.log("Spring length", springs[i].points.length)
+        const dx = directions[i];
+        const dy = directions[i+1];
+
+        if (TILE_TO_BASE_TILE[map.read( x, y)] !== RIVER)
+        {
+            throw new Error("coord not in river")
+        }
+
+        let distance = 1;
+        let currX = x + dx;
+        let currY = y + dy;
+        while( TILE_TO_BASE_TILE[map.read( currX, currY)] === RIVER)
+        {
+            distance++;
+            currX += dx;
+            currY += dy;
+        }
+
+        if (distance < minDistance)
+        {
+            minDistance = distance;
+            px = currX;
+            py = currY;
+            mdx = dx;
+            mdy = dy;
+
+        }
+    }
+
+    //console.log("findNonRiverTile: min = ", minDistance, ", direction = ", mdx, mdy)
+
+    return {
+        px,
+        py
     }
 }
 
+
+function planCities(map, rivers)
+{
+    const longRivers = findLongRivers(map, rivers)
+        .filter(
+            (spring, idx) => {
+                const {points} = spring;
+
+                const len = points.length;
+                const radius = (len * RELATIVE_CITY_RADIUS) | 0;
+
+                const mouthX = points[len - 2];
+                const mouthY = points[len - 1];
+
+                let i;
+                for (i = len - 4; i > 0; i -= 2)
+                {
+                    let x = points[i] - mouthX;
+                    let y = points[i + 1] - mouthY;
+
+                    const dist = Math.sqrt(x * x + y * y);
+
+                    if (dist > radius)
+                    {
+                        //console.log("reached radius");
+                        break;
+                    }
+                }
+
+                const { px, py } = findNonRiverTile(map, points[i], points[i + 1]);
+
+                const radiusSquared = radius * radius;
+                let sum = 0;
+                for (let y = -radius; y < radius; y++)
+                {
+                    const xDelta = (Math.sqrt(radiusSquared - y * y)) | 0;
+
+                    for (let x = -xDelta; x < xDelta; x++)
+                    {
+                        sum += tileVillageRating[map.read(px + x, py + y)];
+                    }
+                }
+
+                spring.centerX = (px & map.sizeMask);
+                spring.centerY = (py & map.sizeMask);
+                spring.radius = radius;
+
+                const isLong = sum > MIN_CITY_RATING;
+
+                console.log("RATING" + idx, sum);
+
+                return isLong;
+
+            });
+
+    for (let j = 0; j < longRivers.length; j++)
+    {
+        const {centerX, centerY, radius} = longRivers[j];
+
+        const radiusSquared = radius * radius;
+        for (let y = -radius; y <= radius; y++)
+        {
+            const xDelta = Math.round(Math.sqrt(radiusSquared - y * y));
+
+            map.putThing(centerX + xDelta, centerY + y, DOT);
+            map.putThing(centerX - xDelta, centerY + y, DOT);
+        }
+
+        map.write(centerX, centerY, MARKER)
+    }
+
+    return longRivers;
+}
+
+
+function planRoads(map, cities)
+{
+
+}
 
 
 export default  class WorldMap {
@@ -720,7 +932,7 @@ export default  class WorldMap {
             throw new Error("Size must be power of two: " + size);
         }
 
-        console.log("New map " + size + " x " + size + ", seed = " + seed)
+        console.log("New map " + size + " x " + size + ", seed = " + seed);
 
         this.random = new Prando(seed);
         this.noise = new SimplexNoise(() => this.random.next());
@@ -737,22 +949,22 @@ export default  class WorldMap {
 
     read(x, y)
     {
-        return this.tiles[y * this.size + x];
+        return this.tiles[(y & this.sizeMask) * this.size + (x & this.sizeMask)];
     }
 
     getThing(x, y)
     {
-        return this.things[y * this.size + x];
+        return this.things[(y & this.sizeMask) * this.size + (x & this.sizeMask)];
     }
 
     write(x, y, tile)
     {
-        this.tiles[y * this.size + x] = tile;
+        this.tiles[(y & this.sizeMask) * this.size + (x & this.sizeMask)] = tile;
     }
 
     putThing(x, y, thing)
     {
-        this.things[y * this.size + x] = thing;
+        this.things[(y & this.sizeMask) * this.size + (x & this.sizeMask)] = thing;
     }
 
 
@@ -846,9 +1058,9 @@ export default  class WorldMap {
                     case RIVER:
                     case RIVER2:
                     case RIVER3:
-                        data[dataOffset++] = 255;
-                        data[dataOffset++] = 0;
                         data[dataOffset++] = 128;
+                        data[dataOffset++] = 128;
+                        data[dataOffset++] = 255;
                         data[dataOffset++] = 255;
                         break;
                     case WATER:
@@ -907,10 +1119,21 @@ export default  class WorldMap {
                         break;
                     case MARKER:
                     case MARKER2:
-                    case MARKER3:
                         data[dataOffset++] = 255;
                         data[dataOffset++] = 0;
                         data[dataOffset++] = 255;
+                        data[dataOffset++] = 255;
+                        break;
+                    case MARKER3:
+                        data[dataOffset++] = 0;
+                        data[dataOffset++] = 255;
+                        data[dataOffset++] = 0;
+                        data[dataOffset++] = 255;
+                        break;
+                    case PATH:
+                        data[dataOffset++] = 128;
+                        data[dataOffset++] = 128;
+                        data[dataOffset++] = 128;
                         data[dataOffset++] = 255;
                         break;
                 }
@@ -932,14 +1155,24 @@ export default  class WorldMap {
         const start = now();
         const map = createBase(size, seed);
         const afterBase = now();
-        drawRivers(map);
-        const end = now();
-        console.log(`Base in ${afterBase - start}ms`)
-        console.log(`Rivers in ${end - start}ms`)
+        const rivers = drawRivers(map);
+        const afterRivers = now();
+        const cities = planCities(map, rivers);
+        const afterCities = now();
 
-        console.log({ thingStats : map.things.reduce((a,b) =>(a[b] = a[b] === undefined ? 1: a[b] + 1,a), [])});
+        planRoads(map, cities);
+
+        const end = now();
+        console.log(`Base in ${afterBase - start}ms`);
+        console.log(`Rivers in ${afterRivers - start}ms`);
+        console.log(`Cities in ${afterCities - start}ms`);
+        console.log(`Roads in ${end - start}ms`);
+
+        //console.log({ thingStats : map.things.reduce((a,b) =>(a[b] = a[b] === undefined ? 1: a[b] + 1,a), [])});
 
         return map;
     };
+
+
 
 }
