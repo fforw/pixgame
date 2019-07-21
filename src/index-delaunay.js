@@ -1,0 +1,72 @@
+import Prando from "prando"
+import Delaunator from "delaunator"
+import Delaunay from "./Delaunay"
+import now from "performance-now"
+
+console.log("delaunay")
+
+window.onload = () => {
+
+    const loading = document.querySelector("div.loading");
+    loading.parentNode.removeChild(loading);
+
+    const size = 800;
+
+    const canvasElement = document.createElement("canvas");
+    canvasElement.width = size;
+    canvasElement.height = size;
+
+    document.getElementById("root").appendChild(canvasElement);
+
+    const ctx = canvasElement.getContext("2d");
+    ctx.fillStyle = "#222";
+    ctx.strokeStyle = "#e8f0f8";
+    ctx.fillRect(0,0,size,size);
+    ctx.fillStyle = "#f44";
+
+    const random = new Prando("happy-koala");
+
+
+    const vertices = new Array(400 * 2);
+    for (let i=0; i < 800; i += 2)
+    {
+        const x = random.nextInt(0, size);
+        const y = random.nextInt(0, size);
+
+        vertices[i] = x;
+        vertices[i + 1] = y;
+    }
+
+    // const start = now();
+    // // const result = Delaunator.from(vertices);
+    // // console.log("Delaunator in " + (now() - start) + "ms");
+    //
+
+    const start2 = now();
+    const triangles = Delaunay.triangulate(vertices);
+    console.log("./Delaunay in " + (now() - start2) + "ms");
+    console.log(triangles);
+
+    for (let i = 0; i < triangles.length; i+=3)
+    {
+        const idxA = triangles[i];
+        const idxB = triangles[i+1];
+        const idxC = triangles[i+2];
+
+        ctx.beginPath();
+        ctx.moveTo(vertices[idxA * 2],vertices[idxA * 2 + 1]);
+        ctx.lineTo(vertices[idxB * 2],vertices[idxB * 2 + 1]);
+        ctx.lineTo(vertices[idxC * 2],vertices[idxC * 2 + 1]);
+        ctx.closePath();
+        ctx.stroke();
+
+    }
+
+
+    for (let i=0; i < 400; i += 2)
+    {
+
+        ctx.fillRect(vertices[i],vertices[i + 1],1,1);
+    }
+
+}
