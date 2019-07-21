@@ -49,14 +49,14 @@ window.onload = () => {
 
     for (let i = 0; i < triangles.length; i+=3)
     {
-        const idxA = triangles[i];
-        const idxB = triangles[i+1];
-        const idxC = triangles[i+2];
+        const offsetA = triangles[i];
+        const offsetB = triangles[i+1];
+        const offsetC = triangles[i+2];
 
         ctx.beginPath();
-        ctx.moveTo(vertices[idxA * 2],vertices[idxA * 2 + 1]);
-        ctx.lineTo(vertices[idxB * 2],vertices[idxB * 2 + 1]);
-        ctx.lineTo(vertices[idxC * 2],vertices[idxC * 2 + 1]);
+        ctx.moveTo(vertices[offsetA],vertices[offsetA + 1]);
+        ctx.lineTo(vertices[offsetB],vertices[offsetB + 1]);
+        ctx.lineTo(vertices[offsetC],vertices[offsetC + 1]);
         ctx.closePath();
         ctx.stroke();
 

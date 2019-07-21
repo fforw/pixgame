@@ -1,0 +1,16 @@
+
+body{
+    margin: 0;
+    padding: 0;
+}
+
+
+.loading
+{
+    width: 400px;
+    height: 100vh;
+    text-align: center;
+    margin: 48vh auto;
+    font-family: monospace;
+    font-size: 24px;
+}

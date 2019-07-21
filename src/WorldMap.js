@@ -1,10 +1,10 @@
-import "./pixi-tilemap"
-
 import SimplexNoise from "simplex-noise"
 import Prando from "prando"
 import now from "performance-now"
-import SquareStar from "squarestarjs"
 import flood from "./flood";
+import marchingSquares from "./marchingSquares";
+import simplify, { perpendicularDistance } from "./simplify";
+import Delaunay from "./Delaunay";
 
 
 const TAU = Math.PI * 2;
@@ -17,10 +17,12 @@ const N4 = 5;
 const RELATIVE_CITY_RADIUS = 0.034;
 const MIN_CITY_RATING = 2000;
 
+
 function clamp(v)
 {
     return v < -1 ? -1 : v > 1 ? 1 : v;
 }
+
 
 const WATER_LINE = 0.05;
 const BEACH_LINE = 0.07;
@@ -57,23 +59,24 @@ export const PATH = 25;
 
 // things
 export const EMPTY = 1;
-export const _WATER = 2;
-export const _RIVER = 3;
-export const _WOODS = 4;
-export const BLOCKED = 5;
-export const LARGE_TREE = 6;
-export const LARGE_TREE_2 = 7;
-export const SMALL_TREE = 8;
-export const SMALL_TREE_2 = 9;
-export const SMALL_TREE_3 = 10;
-export const PLANT = 11;
-export const PLANT_2 = 12;
-export const PLANT_3 = 13;
-export const BOULDER = 14;
-export const BOULDER_2 = 15;
-export const BOULDER_3 = 16;
-export const HOUSE = 17;
-export const DOT = 18;
+export const PLANT = 2;
+export const PLANT_2 = 3;
+export const PLANT_3 = 4;
+export const DOT = 5;
+export const _RIVER = 6;
+export const _WOODS = 7;
+export const BLOCKED = 8;   // non-walkable from here on
+export const _WATER = 9;
+export const LARGE_TREE = 10;
+export const LARGE_TREE_2 = 11;
+export const SMALL_TREE = 12;
+export const SMALL_TREE_2 = 13;
+export const SMALL_TREE_3 = 14;
+export const BOULDER = 15;
+export const BOULDER_2 = 16;
+export const BOULDER_3 = 17;
+export const HOUSE = 18;
+
 
 function calcWeightSum(array)
 {
@@ -89,6 +92,7 @@ function calcWeightSum(array)
     }
     return sum;
 }
+
 
 const tileNames = [
     "WATER",
@@ -147,14 +151,14 @@ const tileVillageRating = [
 ];
 
 const variants = {
-    [WATER] : [WATER, WATER2, WATER3],
-    [SAND] :  [SAND, SAND2, SAND3],
-    [GRASS] : [GRASS, GRASS2, GRASS3],
-    [DIRT] :  [DIRT, DIRT2, DIRT3],
-    [ROCK] :  [ROCK, ROCK2, ROCK3],
-    [WOODS] : [WOODS, WOODS3],
-    [WOODS2] :[WOODS2, WOODS4],
-    [RIVER] : [RIVER, RIVER2, RIVER3]
+    [WATER]: [WATER, WATER2, WATER3],
+    [SAND]: [SAND, SAND2, SAND3],
+    [GRASS]: [GRASS, GRASS2, GRASS3],
+    [DIRT]: [DIRT, DIRT2, DIRT3],
+    [ROCK]: [ROCK, ROCK2, ROCK3],
+    [WOODS]: [WOODS, WOODS3],
+    [WOODS2]: [WOODS2, WOODS4],
+    [RIVER]: [RIVER, RIVER2, RIVER3]
 };
 
 /**
@@ -211,15 +215,100 @@ function normalizeSpawnTable(table)
     return table;
 }
 
+
 const spawnTable = normalizeSpawnTable({
-    [WATER] : [_WATER, 1],
-    [SAND] :  [0, 500, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
-    [GRASS] : [0, 1000, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 3, SMALL_TREE_3, 3, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 2],
-    [DIRT] :  [0, 1000, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 3, SMALL_TREE_3, 3, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 2],
-    [ROCK] :  [BLOCKED, 4, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
-    [WOODS] : [_WOODS, 150, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 5, SMALL_TREE_2, 5, SMALL_TREE_3, 5, PLANT, 1, PLANT_2, 1, PLANT_3, 1, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 2],
-    [WOODS2]: [_WOODS, 40, LARGE_TREE, 2, LARGE_TREE_2, 2, SMALL_TREE, 5, SMALL_TREE_2, 5, SMALL_TREE_3, 5, PLANT, 1, PLANT_2, 1, PLANT_3, 1, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 2],
-    [RIVER] : [_RIVER, 1]
+    [WATER]: [_WATER, 1],
+    [SAND]: [0, 500, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
+    [GRASS]: [
+        0,
+        1000,
+        LARGE_TREE,
+        2,
+        LARGE_TREE_2,
+        2,
+        SMALL_TREE,
+        3,
+        SMALL_TREE_3,
+        3,
+        BOULDER,
+        1,
+        BOULDER_3,
+        1,
+        BOULDER_2,
+        2
+    ],
+    [DIRT]: [
+        0,
+        1000,
+        LARGE_TREE,
+        2,
+        LARGE_TREE_2,
+        2,
+        SMALL_TREE,
+        3,
+        SMALL_TREE_3,
+        3,
+        BOULDER,
+        1,
+        BOULDER_3,
+        1,
+        BOULDER_2,
+        2
+    ],
+    [ROCK]: [BLOCKED, 4, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
+    [WOODS]: [
+        _WOODS,
+        150,
+        LARGE_TREE,
+        2,
+        LARGE_TREE_2,
+        2,
+        SMALL_TREE,
+        5,
+        SMALL_TREE_2,
+        5,
+        SMALL_TREE_3,
+        5,
+        PLANT,
+        1,
+        PLANT_2,
+        1,
+        PLANT_3,
+        1,
+        BOULDER,
+        1,
+        BOULDER_3,
+        1,
+        BOULDER_2,
+        2
+    ],
+    [WOODS2]: [
+        _WOODS,
+        40,
+        LARGE_TREE,
+        2,
+        LARGE_TREE_2,
+        2,
+        SMALL_TREE,
+        5,
+        SMALL_TREE_2,
+        5,
+        SMALL_TREE_3,
+        5,
+        PLANT,
+        1,
+        PLANT_2,
+        1,
+        PLANT_3,
+        1,
+        BOULDER,
+        1,
+        BOULDER_3,
+        1,
+        BOULDER_2,
+        2
+    ],
+    [RIVER]: [_RIVER, 1]
 });
 
 
@@ -256,6 +345,7 @@ export function pickVariant(map, base)
     return result;
 }
 
+
 export function isVariant(tile, base)
 {
     return TILE_TO_BASE_TILE[tile] === base;
@@ -283,7 +373,7 @@ function spawn(map, spawns)
 
 function spawnForBlock(map, mapOffset, baseTile)
 {
-    const { things, size, sizeMask } = map;
+    const {things, size, sizeMask} = map;
 
     if (things[mapOffset] !== 0)
     {
@@ -404,7 +494,7 @@ function createBase(size, seed)
 {
     const map = new WorldMap(size, seed);
 
-    const { tiles } = map;
+    const {tiles} = map;
 
     let mapOffset = 0;
     for (let y = 0; y < size; y++)
@@ -422,11 +512,12 @@ function createBase(size, seed)
     return map;
 }
 
+
 function randomProbes(map)
 {
     const probes = [];
 
-    const { size } = map;
+    const {size} = map;
 
     const probeCount = size * size / 1000;
 
@@ -468,7 +559,7 @@ function climbUp(map, probe)
     let currentX = probe.x;
     let currentY = probe.y;
 
-    const { size } = map;
+    const {size} = map;
 
     let improved = false;
     for (let i = 0; i < directions.length; i += 2)
@@ -554,7 +645,7 @@ function jitter(map, filtered, amount = 8)
         {
             multis.push(
                 {
-                    ... probe,
+                    ...probe,
                     points: [],
                     x: (probe.x - amount - yOff) | 0,
                     y: (probe.y - amount + xOff) | 0
@@ -573,7 +664,7 @@ function createSprings(map)
 
     console.log(probes.length, "random probes");
 
-    const { size } = map;
+    const {size} = map;
 
     const length = probes.length;
     let walkingStart = 0, i = 0;
@@ -602,7 +693,6 @@ function createSprings(map)
         //drawSprings(probes, imageData, false);
     }
 
-
     const filtered = removeDuplicates(probes);
 
     //console.log(filtered.length, "springs");
@@ -622,7 +712,7 @@ function flow(map, probe)
 
     let improved = false;
 
-    const { size } = map;
+    const {size} = map;
 
     for (let i = 0; i < directions.length; i += 2)
     {
@@ -632,9 +722,9 @@ function flow(map, probe)
         if (x > 0 && y > 0 && x < size && y < size)
         {
             let tile = map.read(x, y);
-            if (!isVariant(tile ,RIVER))
+            if (!isVariant(tile, RIVER))
             {
-                if (isVariant(tile,ROCK))
+                if (isVariant(tile, ROCK))
                 {
                     const {nx, ny, nz, nw} = map.heightCoords(x, y);
                     const n3 = map.noise4D(nx * N3, nw * N3, ny * N3, nz * N3);
@@ -664,7 +754,7 @@ function flow(map, probe)
 
     if (!improved)
     {
-        const dir = map.random.nextInt(0,3) * 2;
+        const dir = map.random.nextInt(0, 3) * 2;
         probe.x += directions[dir];
         probe.y += directions[dir + 1];
         probe.tile = TILE_TO_BASE_TILE[map.read(probe.x, probe.y)];
@@ -674,7 +764,7 @@ function flow(map, probe)
         const n = map.random.next();
         if (n < 0.25)
         {
-            const dir = ((currentDirection/2 + (n < 0.125 ? -1 : 1)) & 3)* 2;
+            const dir = ((currentDirection / 2 + (n < 0.125 ? -1 : 1)) & 3) * 2;
 
             probe.x += directions[dir];
             probe.y += directions[dir + 1];
@@ -722,7 +812,7 @@ function findMean(springs)
 function findLongRivers(map, springs)
 {
     // we are roughly sorted, but not perfectly
-    springs.sort((a,b) => a.points.length - b.points.length);
+    springs.sort((a, b) => a.points.length - b.points.length);
 
     const last = springs.length - 1;
 
@@ -750,7 +840,7 @@ function drawRivers(map)
 {
     const springs = createSprings(map);
 
-    const { size } = map;
+    const {size} = map;
 
     const length = springs.length;
     let flowingStart = 0, i = 0;
@@ -762,7 +852,7 @@ function drawRivers(map)
             const probe = springs[j];
 
             const {x, y} = probe;
-            probe.points.push(x,y);
+            probe.points.push(x, y);
 
             const currentTile = map.read(probe.x, probe.y);
             if (isVariant(currentTile, WATER))
@@ -783,15 +873,14 @@ function drawRivers(map)
     }
     console.log("Stopped flowing after ", i, " iterations");
 
-
     for (let i = 0; i < springs.length; i++)
     {
-        const { points } = springs[i];
+        const {points} = springs[i];
 
         for (let j = 0; j < points.length; j += 2)
         {
-                const width = getRiverWidth(j);
-                flood(map, points[j], points[j + 1], width);
+            const width = getRiverWidth(j);
+            flood(map, points[j], points[j + 1], width);
         }
     }
 
@@ -806,9 +895,9 @@ function findNonRiverTile(map, x, y)
     for (let i = 0; i < directions.length; i += 2)
     {
         const dx = directions[i];
-        const dy = directions[i+1];
+        const dy = directions[i + 1];
 
-        if (TILE_TO_BASE_TILE[map.read( x, y)] !== RIVER)
+        if (TILE_TO_BASE_TILE[map.read(x, y)] !== RIVER)
         {
             throw new Error("coord not in river")
         }
@@ -816,7 +905,7 @@ function findNonRiverTile(map, x, y)
         let distance = 1;
         let currX = x + dx;
         let currY = y + dy;
-        while( TILE_TO_BASE_TILE[map.read( currX, currY)] === RIVER)
+        while (TILE_TO_BASE_TILE[map.read(currX, currY)] === RIVER)
         {
             distance++;
             currX += dx;
@@ -871,7 +960,7 @@ function planCities(map, rivers)
                     }
                 }
 
-                const { px, py } = findNonRiverTile(map, points[i], points[i + 1]);
+                const {px, py} = findNonRiverTile(map, points[i], points[i + 1]);
 
                 const radiusSquared = radius * radius;
                 let sum = 0;
@@ -917,110 +1006,96 @@ function planCities(map, rivers)
 }
 
 
-function planRoads(map, cities)
+function flatten(arrayOfArrays)
 {
-
-    console.log("planRoads", cities);
-
-    const squareStar = new SquareStar.js();
-    squareStar.setGrid(map.things);
-    squareStar.enableSync();
-    squareStar.setAcceptableTiles([
-        0,
-        EMPTY,
-        _RIVER,
-        _WOODS,
-        PATH,
-        PLANT,
-        PLANT_2,
-        PLANT_3,
-        DOT
-    ]);
-
-    squareStar.setTileCost(PATH, .01);
-    squareStar.setTileCost(_WOODS, 5);
-    squareStar.setTileCost(_RIVER, 30);
-
-    const length = cities.length;
-
-    let count = 0;
-    for (let i = 0; i < length; i++)
+    let out = [];
+    for (let i = 0; i < arrayOfArrays.length; i++)
     {
-
-        const minPerSector = [
-            {distance: Infinity},
-            {distance: Infinity},
-            {distance: Infinity},
-            {distance: Infinity}
-        ];
-
-        const cityA = cities[i];
-        const { centerX : x0, centerY : y0 } = cityA;
-
-        for (let j = length - 1; j > i; j--)
-        {
-            const cityB = cities[j];
-            const { centerX : x1, centerY : y1 } = cityB;
-
-            const yDelta = y1 - y0;
-            const xDelta = x1 - x0;
-            const sector = (Math.atan2(yDelta, xDelta) * 4 / TAU) & 3;
-
-
-            const dist = xDelta * xDelta + yDelta * yDelta;
-
-            if (dist < minPerSector[sector].distance)
-            {
-                minPerSector[sector].distance  = dist;
-                minPerSector[sector].city  = cityB;
-            }
-        }
-
-        for (let j = 0; j < minPerSector.length; j++)
-        {
-            const entry = minPerSector[j];
-            if (entry.city)
-            {
-                squareStar.findPath(
-                    cityA.centerX,
-                    cityA.centerY,
-                    entry.city.centerX,
-                    entry.city.centerY,
-                    path => {
-
-                        if (path)
-                        {
-                            console.log("FOUND: length = ", path.length);
-                            for (let i = 0; i < path.length; i++)
-                            {
-                                const {x, y} = path[i];
-                                map.write(x, y, PATH);
-                            }
-
-                            count++;
-                        }
-                        else
-                        {
-                            console.log("NOT FOUND");
-                        }
-                        //console.log("PATH", path)
-                    }
-                );
-                squareStar.calculate()
-            }
-        }
+        out = out.concat(arrayOfArrays[i]);
     }
+    return out;
+}
 
-    console.log(count, "roads");
+/**
+ * Returns true if the given point x,y is inside the potentially convex polygon given as array of points.
+ *
+ * @param {Number} x    x-coordinate of point
+ * @param {Number} y    y-coordinate of point
+ * @param {Array<Number>} poly      Array of polygon points in pairs ( [x0,y0,x1,y1,...,xN,yN] )
+ * @return {boolean} true if point is in polygon
+ */
+export function isPointInPolygon(x, y, poly)
+{
+    const { length } = poly;
 
+    let prevX = poly[ length - 2];
+    let prevY = poly[ length - 1];
+    let inPolygon = false;
+    for (let i = 0; i < length; i += 2)
+    {
+        const currX = poly[i];
+        const currY = poly[i + 1];
+        if (
+            currY > y !== prevY > y &&
+            x < currX + (prevX - currX) * (y - currY) / (prevY - currY)
+        )
+        {
+            inPolygon = !inPolygon
+        }
+        prevX = currX;
+        prevY = currY;
+    }
+    return inPolygon;
 }
 
 
-export default  class WorldMap {
+/**
+ * Filters the given triangles so only triangles where the majority of rasterized map point are walkable remain.
+ *
+ * @param {WorldMap} map    map
+ * @param {Array<number>} vertices
+ * @param {Array<number>} triangles
+ * @return {Array<number>} walkable triangles
+ */
+function filterWalkable(map, vertices, triangles)
+{
+    return triangles;
+}
+
+
+const SIMPLIFICATION_EPSILON = 2.5;
+
+
+function planRoads(map, cities)
+{
+    const polygons = marchingSquares(map.things, map.size, map.size, t => t >= BLOCKED, true);
+
+    console.log("MARCHING-CUBE: polygons = ", polygons.length, ", vertexes = ", polygons.reduce((count, array) => count + array.length, 0));
+
+    const simplified = polygons.map(p => simplify(p, SIMPLIFICATION_EPSILON, true)).filter(p => p.length > 6);
+
+    console.log("SIMPLIFIED: polygons = ", simplified.length, ", vertexes = ", simplified.reduce((count, array) => count + array.length, 0));
+
+    const vertices = flatten(simplified);
+    const triangles = Delaunay.triangulate(vertices);
+
+    console.log("DELAUNAY: triangles", triangles.length / 3, ", vertexes = ", triangles.length);
+
+    const walkable = filterWalkable(map, vertices, triangles);
+
+    console.log("WALKABLE: triangles", walkable.length / 3, ", vertexes = ", walkable.length);
+
+    map.vertices = vertices;
+    map.polygons = simplified;
+    map.triangles = walkable;
+}
+
+
+export default class WorldMap {
     constructor(size = 800, seed)
     {
         const lg = Math.log(size) / Math.log(2);
-        if ( (lg % 1) !== 0)
+        if ((lg % 1) !== 0)
         {
             throw new Error("Size must be power of two: " + size);
         }
@@ -1045,15 +1120,18 @@ export default  class WorldMap {
         return this.tiles[(y & this.sizeMask) * this.size + (x & this.sizeMask)];
     }
 
+
     getThing(x, y)
     {
         return this.things[(y & this.sizeMask) * this.size + (x & this.sizeMask)];
     }
 
+
     write(x, y, tile)
     {
         this.tiles[(y & this.sizeMask) * this.size + (x & this.sizeMask)] = tile;
     }
+
 
     putThing(x, y, thing)
     {
@@ -1071,7 +1149,7 @@ export default  class WorldMap {
      * @param {number} coords.ny    predetermined 4D y-coordinate
      * @param {number} coords.nz    predetermined 4D z-coordinate
      * @param {number} coords.nw    predetermined 4D w-coordinate
-     * 
+     *
      * @return {number} height between -1 and 1 inclusive
      */
     heightFn(x, y, coords)
@@ -1130,9 +1208,10 @@ export default  class WorldMap {
         };
     }
 
+
     render(ctx)
     {
-        const { size } = this;
+        const {size} = this;
 
         const imageData = ctx.createImageData(size, size);
 
@@ -1237,13 +1316,16 @@ export default  class WorldMap {
 
     }
 
-    noise4D(x,y,z,w)
+
+    noise4D(x, y, z, w)
     {
-        return this.noise.noise4D(x,y,z,w);
+        return this.noise.noise4D(x, y, z, w);
 
     }
 
-    static generate(size, seed = new Date().getTime()) {
+
+    static generate(size, seed = new Date().getTime())
+    {
 
         const start = now();
         const map = createBase(size, seed);
@@ -1265,7 +1347,5 @@ export default  class WorldMap {
 
         return map;
     };
-
-
 
 }

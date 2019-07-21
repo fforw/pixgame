@@ -36,6 +36,10 @@ const textures = [
 const thingTextures = [
     null,
     null,
+    "plant.png",
+    "plant2.png",
+    "plant3.png",
+    "dot.png",
     null,
     null,
     null,
@@ -45,16 +49,11 @@ const thingTextures = [
     "small-tree.png",
     "small-tree2.png",
     "small-tree3.png",
-    "plant.png",
-    "plant2.png",
-    "plant3.png",
     "boulder.png",
     "boulder2.png",
     "boulder3.png",
     "house.png",
-    "dot.png"
 ];
-
 
 function determineScale(width)
 {
@@ -196,24 +195,15 @@ function setup(loader, resources)
             {
                 const thing = map.getThing((mapX + x) & sizeMask, (mapY + y) & sizeMask);
 
-                //if (thing > BLOCKED)
+                const texture = thingTextures[thing];
+                if (texture)
                 {
-                    const texture = thingTextures[thing];
-                    if (texture)
-                    {
-                        const { pivot, frame } = atlasJSON.frames[texture];
-                        groundTiles.addFrame(
-                            texture,
-                            screenX + (x << 4) - (pivot.x * frame.w)|0,
-                            screenY + (y << 4) - (pivot.y * frame.h)|0
-                        );
-                    }
-                    else
-                    {
-//                        throw new Error("No texture for " + thing)
-                    }
-                    //console.log({texture, x: screenX + x * 16, y:screenY + y * 16})
-
+                    const { pivot, frame } = atlasJSON.frames[texture];
+                    groundTiles.addFrame(
+                        texture,
+                        screenX + (x << 4) - (pivot.x * frame.w)|0,
+                        screenY + (y << 4) - (pivot.y * frame.h)|0
+                    );
                 }
             }
 
