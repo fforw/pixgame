@@ -2,58 +2,10 @@ import * as PIXI from "pixi.js"
 import "./pixi-tilemap"
 // noinspection ES6UnusedImports
 import STYLES from "./style.css"
-import WorldMap, { MARKER, BLOCKED, HOUSE } from "./WorldMap";
+import SceneGraph from "./SceneGraph";
+import WorldScene from "./scenes/WorldScene";
+import StartScene from "./scenes/StartScene";
 
-
-const textures = [
-    "water.png",
-    "water2.png",
-    "water3.png",
-    "sand.png",
-    "sand2.png",
-    "sand3.png",
-    "grass.png",
-    "grass2.png",
-    "grass3.png",
-    "dirt.png",
-    "dirt2.png",
-    "dirt3.png",
-    "rock.png",
-    "rock2.png",
-    "rock3.png",
-    "woods.png",
-    "woods2.png",
-    "woods.png",
-    "woods2.png",
-    "river.png",
-    "river2.png",
-    "river3.png",
-    "marker.png",
-    "marker2.png",
-    "marker3.png",
-    "dirt.png"
-];
-const thingTextures = [
-    null,
-    null,
-    "plant.png",
-    "plant2.png",
-    "plant3.png",
-    "dot.png",
-    null,
-    null,
-    null,
-    null,
-    "large-tree.png",
-    "large-tree2.png",
-    "small-tree.png",
-    "small-tree2.png",
-    "small-tree3.png",
-    "boulder.png",
-    "boulder2.png",
-    "boulder3.png",
-    "house.png",
-];
 
 function determineScale(width)
 {
@@ -72,11 +24,8 @@ function determineScale(width)
 }
 
 
-let loading;
 
 window.onload = () => {
-
-    loading = document.querySelector("div.loading");
 
     PIXI.Loader.shared
         .add("atlas/atlas-0.json")
@@ -87,9 +36,7 @@ window.onload = () => {
 //     console.log(ev.progress);
 // });
 
-let groundTiles;
-
-let map;
+let tileLayer;
 
 const START_X = 1025 * 16;
 const START_Y = 1197 * 16;
@@ -98,27 +45,105 @@ let posX = START_X;
 let posY = START_Y;
 let dx = 0;
 let dy = 0;
-let keyX = 0;
-let keyY = 0;
 
 const ACCELERATION = 0.5;
 const SPEED_LIMIT = 12;
 
+/**
+ * Global context object for the scene graph.
+ *
+ * @type {{app: PIXI.Application, atlas: object, container: PIXI.Container, posX: number, posY: number, controls: {moveUpDown: number, moveLeftRight: number}, tileLayer: PIXI.tilemap.CompositeRectTileLayer, width: number, height: number, scale: number}}
+ */
+
+const ctx = {
+    app: null,
+    /** atlas.json data **/
+    atlas : null,
+    /**
+     * Container around our tilemap
+     */
+    container: null,
+    /** Current WorldMap */
+    map : null,
+    /**
+     * Current width
+     */
+    width: -1,
+    /**
+     * Current height
+     */
+    height: -1,
+    /**
+     * CompositeRectTileLayer
+     */
+    tileLayer : null,
+    /**
+     * Current scale
+     */
+    scale: 2,
+    /**
+     * Current scale
+     */
+    posX: START_X,
+    posY: START_Y,
+
+    /**
+     * Current user input
+     */
+    controls: {
+        moveLeftRight: 0,
+        moveUpDown: 0,
+        action: false,
+        meta: false
+    }
+};
+
+
+function handleMovement(delta)
+{
+    const {moveLeftRight, moveUpDown} = ctx.controls;
+
+    if (moveLeftRight)
+    {
+        dx += moveLeftRight * ACCELERATION;
+        if (Math.abs(dx) > SPEED_LIMIT)
+        {
+            dx = Math.sign(dx) * SPEED_LIMIT;
+        }
+    }
+    else
+    {
+        dx = Math.abs(dx) > 0.1 ? dx * 0.8 : 0;
+    }
+    if (moveUpDown)
+    {
+        dy += moveUpDown * ACCELERATION;
+        if (Math.abs(dy) > SPEED_LIMIT)
+        {
+            dy = Math.sign(dy) * SPEED_LIMIT;
+        }
+    }
+    else
+    {
+        dy = Math.abs(dy) > 0.1 ? dy * 0.8 : 0;
+    }
+
+    if (ctx.map)
+    {
+        posX = (posX + dx * delta) & ctx.map.fineMask;
+        posY = (posY + dy * delta) & ctx.map.fineMask;
+
+        ctx.posX = posX;
+        ctx.posY = posY;
+    }
+}
+
+
 function setup(loader, resources)
 {
-    const atlasJSON = resources["atlas/atlas-0.json"].data;
+    const atlas = resources["atlas/atlas-0.json"].data;
 
     //console.log("setup", resources);
-
-    map = WorldMap.generate(2048, "floppy-disk");
-
-    map.tiles[0] = MARKER;
-
-    map.things[1193 * 2048 + 1023] = HOUSE;
-
-    loading.parentNode.removeChild(loading);
-
-    //console.log({loader,resources});
 
     const scale = determineScale(window.innerWidth);
 
@@ -130,8 +155,6 @@ function setup(loader, resources)
     const halfWidth = width/2;
     const halfHeight = height/2;
 
-    const widthInTiles = Math.ceil(width / 16) + 5;
-    const heightInTiles = Math.ceil(height / 16) + 9;
 
     const app = new PIXI.Application({
         width: width,
@@ -142,143 +165,51 @@ function setup(loader, resources)
     document.body.appendChild(app.view);
 
 
-    function drawTiles(map)
-    {
-        groundTiles.clear();
-
-        const { sizeMask, fineMask } = map;
-
-        let xOffset = (posX - halfWidth) & fineMask;
-        let yOffset = (posY - halfHeight)& fineMask;
-
-        let screenX = -32 + -(xOffset & 15);
-        let screenY = -32 + -(yOffset & 15);
-
-        const mapX = ( -2 + (xOffset >> 4)) & sizeMask;
-        const mapY = ( -2 + (yOffset >> 4)) & sizeMask;
-
-        //console.log("Map pos", mapX, mapY, sizeMask);
-        //console.log({screenX, screenY, txSteps, tySteps, mapX, mapY})
-
-        const yPosInTiles = (posY >> 4)|0;
-
-        // DRAW TILES
-        for (let y = 0 ; y < heightInTiles; y++)
-        {
-            for (let x = 0; x < widthInTiles; x++)
-            {
-                const tile = map.read((mapX + x) & sizeMask, (mapY + y) & sizeMask);
-                const texture = textures[tile];
-                const { pivot, frame } = atlasJSON.frames[texture];
-
-                groundTiles.addFrame(
-                    texture,
-                    screenX + (x << 4) - ((pivot.x * frame.w)|0),
-                    screenY + (y << 4) - ((pivot.y * frame.h)|0)
-                );
-
-            }
-        }
-
-        for (let y = 0 ; y < heightInTiles; y++)
-        {
-            if (((mapY + y) & sizeMask) === ((yPosInTiles + 1) & sizeMask) && (posY & 15) < 8)
-            {
-                groundTiles.addFrame(
-                    "bunny.png",
-                    halfWidth,
-                    halfHeight - 20
-                );
-            }
-
-            for (let x = 0; x < widthInTiles; x++)
-            {
-                const thing = map.getThing((mapX + x) & sizeMask, (mapY + y) & sizeMask);
-
-                const texture = thingTextures[thing];
-                if (texture)
-                {
-                    const { pivot, frame } = atlasJSON.frames[texture];
-                    groundTiles.addFrame(
-                        texture,
-                        screenX + (x << 4) - (pivot.x * frame.w)|0,
-                        screenY + (y << 4) - (pivot.y * frame.h)|0
-                    );
-                }
-            }
-
-
-            if (((mapY + y) & sizeMask) === ((yPosInTiles + 1) & sizeMask) && (posY & 15) >= 8)
-            {
-                groundTiles.addFrame(
-                    "bunny.png",
-                    halfWidth,
-                    halfHeight - 20
-                );
-            }
-        }
-
-        groundTiles.addFrame(
-            "bunny-outline.png",
-            halfWidth,
-            halfHeight - 20
-        );
-    }
-
     //PIXI.tilemap.Constant.use32bitIndex = true;
-    groundTiles = new PIXI.tilemap.CompositeRectTileLayer(0, PIXI.utils.TextureCache["atlas/atlas-0.json_image"]);
-    drawTiles(map);
+    tileLayer = new PIXI.tilemap.CompositeRectTileLayer(0, PIXI.utils.TextureCache["atlas/atlas-0.json_image"]);
 
-    app.stage.addChild(groundTiles);
+    const container = new PIXI.Container();
+    container.addChild(tileLayer);
+    app.stage.addChild(container);
 
+    container.x = app.screen.width / 2;
+    container.y = app.screen.height / 2;
+    container.pivot.x = halfWidth;
+    container.pivot.y = halfHeight;
 
-
-    app.ticker.add((delta) => {
-        // rotate the container!
-        // use delta to create frame-independent transform
-        //container.rotation -= 0.01 * delta;
-
-        if (keyX)
-        {
-            dx += keyX * ACCELERATION;
-            if (Math.abs(dx) > SPEED_LIMIT)
-            {
-                dx = Math.sign(dx) * SPEED_LIMIT;
-            }
-        }
-        else
-        {
-            dx *= 0.5;
-        }
-        if (keyY)
-        {
-            dy += keyY * ACCELERATION;
-            if (Math.abs(dy) > SPEED_LIMIT)
-            {
-                dy = Math.sign(dy) * SPEED_LIMIT;
-            }
-        }
-        else
-        {
-            dy *= 0.5;
-        }
-
-        posX = (posX + dx * delta) & map.fineMask;
-        posY = (posY + dy * delta) & map.fineMask;
-        
-        drawTiles(map);
-
-        //console.log(posX);
+    // initialize context fields
+    Object.assign(ctx ,{
+        tileLayer,
+        atlas,
+        width,
+        height,
+        app,
+        container,
+        scale,
+        posX,
+        posY
     });
 
+    const sceneGraph = new SceneGraph([
+        StartScene,
+        WorldScene
+    ], ctx);
+
+    app.ticker.add((delta) => {
+
+        handleMovement(delta);
+        sceneGraph.ticker(delta);
+    });
 
     window.addEventListener("keydown", ev => {
         const keyCode = ev.keyCode;
 
-        //console.log("keyCode = ", keyCode);
 
         switch(keyCode)
         {
+            case 80:
+                console.log("POS", (posX >> 4)|0, (posY >> 4)|0, ", fine = ", posX, posY, ", layerMask = ", getCurrentLayerMask())
+                break;
             case 36:
                 posX = START_X;
                 posY = START_Y;
@@ -289,20 +220,22 @@ function setup(loader, resources)
                 break;
             case 38:
             case 87:
-                keyY = -1;
+                ctx.controls.moveUpDown = -1;
                 break;
             case 37:
             case 65:
-                keyX = -1;
+                ctx.controls.moveLeftRight = -1;
                 break;
             case 40:
             case 83:
-                keyY = 1;
+                ctx.controls.moveUpDown = 1;
                 break;
             case 39:
             case 68:
-                keyX = 1;
+                ctx.controls.moveLeftRight = 1;
                 break;
+            default:
+                console.log("keyCode = ", keyCode);
         }
     }, true);
     window.addEventListener("keyup", ev => {
@@ -316,14 +249,27 @@ function setup(loader, resources)
             case 87:
             case 40:
             case 83:
-                keyY = 0;
+                ctx.controls.moveUpDown = 0;
                 break;
             case 37:
             case 65:
             case 39:
             case 68:
-                keyX = 0;
+                ctx.controls.moveLeftRight = 0;
                 break;
         }
     }, true);
+
+    window.addEventListener("resize", ev => {
+
+        ctx.width = (window.innerWidth / ctx.scale)|0;
+        ctx.height = (window.innerHeight / ctx.scale)|0;
+
+        app.renderer.resize(ctx.width,ctx.height)
+
+        //console.log("Window resized to " + ctx.width + " x " + ctx.height)
+
+    }, true);
+
+    sceneGraph.start();
 }

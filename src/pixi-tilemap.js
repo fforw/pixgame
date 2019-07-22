@@ -56,7 +56,7 @@ var pixi_tilemap;
             var len2 = Math.ceil(bitmaps.length / texPerChild);
             var i;
             for (i = 0; i < len1; i++) {
-                this.children[i].textures = bitmaps.slice(i * texPerChild, (i + 1) * texPerChild);
+                this.children[i].TEXTURES = bitmaps.slice(i * texPerChild, (i + 1) * texPerChild);
             }
             for (i = len1; i < len2; i++) {
                 var layer = new pixi_tilemap.RectTileLayer(this.zIndex, bitmaps.slice(i * texPerChild, (i + 1) * texPerChild));

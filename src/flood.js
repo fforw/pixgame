@@ -1,4 +1,4 @@
-import { RIVER, pickVariant, _RIVER, TILE_TO_BASE_TILE, WATER } from "./WorldMap";
+import { RIVER, _RIVER, WATER } from "./WorldMap";
 
 export default function flood(map, x, y, width)
 {
@@ -15,7 +15,7 @@ export default function flood(map, x, y, width)
             things[( y - 1) * size + x] = _RIVER;
             things[( y - 1) * size +  x + 1] = _RIVER;
             things[y * size + x - 1] = _RIVER;
-            off = y * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = y * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[y * size +  x + 1] = _RIVER;
             things[( y + 1) * size + x - 1] = _RIVER;
             things[( y + 1) * size + x] = _RIVER;
@@ -27,8 +27,8 @@ export default function flood(map, x, y, width)
             things[( y - 1) * size +  x + 1] = _RIVER;
             things[( y - 1) * size +  x + 2] = _RIVER;
             things[y * size + x - 1] = _RIVER;
-            off = y * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = y * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[y * size +  x + 2] = _RIVER;
             things[( y + 1) * size + x - 1] = _RIVER;
             things[( y + 1) * size + x] = _RIVER;
@@ -44,14 +44,14 @@ export default function flood(map, x, y, width)
             things[( y - 2) * size +  x + 2] = _RIVER;
             things[( y - 1) * size + x - 2] = _RIVER;
             things[( y - 1) * size + x - 1] = _RIVER;
-            off = ( y - 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 1) * size +  x + 2] = _RIVER;
             things[( y - 1) * size +  x + 3] = _RIVER;
             things[y * size + x - 2] = _RIVER;
             things[y * size + x - 1] = _RIVER;
-            off = y * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = y * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[y * size +  x + 2] = _RIVER;
             things[y * size +  x + 3] = _RIVER;
             things[( y + 1) * size + x - 1] = _RIVER;
@@ -72,16 +72,16 @@ export default function flood(map, x, y, width)
             things[( y - 2) * size +  x + 2] = _RIVER;
             things[( y - 1) * size + x - 3] = _RIVER;
             things[( y - 1) * size + x - 2] = _RIVER;
-            off = ( y - 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 1) * size +  x + 2] = _RIVER;
             things[( y - 1) * size +  x + 3] = _RIVER;
             things[y * size + x - 3] = _RIVER;
             things[y * size + x - 2] = _RIVER;
-            off = y * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = y * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[y * size +  x + 2] = _RIVER;
             things[y * size +  x + 3] = _RIVER;
             things[( y + 1) * size + x - 2] = _RIVER;
@@ -104,23 +104,23 @@ export default function flood(map, x, y, width)
             things[( y - 2) * size +  x + 2] = _RIVER;
             things[( y - 1) * size + x - 3] = _RIVER;
             things[( y - 1) * size + x - 2] = _RIVER;
-            off = ( y - 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 1) * size +  x + 2] = _RIVER;
             things[( y - 1) * size +  x + 3] = _RIVER;
             things[y * size + x - 3] = _RIVER;
             things[y * size + x - 2] = _RIVER;
-            off = y * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = y * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[y * size +  x + 2] = _RIVER;
             things[y * size +  x + 3] = _RIVER;
             things[( y + 1) * size + x - 3] = _RIVER;
             things[( y + 1) * size + x - 2] = _RIVER;
-            off = ( y + 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 1) * size +  x + 2] = _RIVER;
             things[( y + 1) * size +  x + 3] = _RIVER;
             things[( y + 2) * size + x - 2] = _RIVER;
@@ -143,43 +143,43 @@ export default function flood(map, x, y, width)
             things[( y - 3) * size +  x + 2] = _RIVER;
             things[( y - 2) * size + x - 3] = _RIVER;
             things[( y - 2) * size + x - 2] = _RIVER;
-            off = ( y - 2) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 2) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 2) * size +  x + 2] = _RIVER;
             things[( y - 2) * size +  x + 3] = _RIVER;
             things[( y - 1) * size + x - 4] = _RIVER;
             things[( y - 1) * size + x - 3] = _RIVER;
-            off = ( y - 1) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 1) * size +  x + 3] = _RIVER;
             things[( y - 1) * size +  x + 4] = _RIVER;
             things[y * size + x - 4] = _RIVER;
             things[y * size + x - 3] = _RIVER;
-            off = y * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = y * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[y * size +  x + 3] = _RIVER;
             things[y * size +  x + 4] = _RIVER;
             things[( y + 1) * size + x - 4] = _RIVER;
             things[( y + 1) * size + x - 3] = _RIVER;
-            off = ( y + 1) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 1) * size +  x + 3] = _RIVER;
             things[( y + 1) * size +  x + 4] = _RIVER;
             things[( y + 2) * size + x - 3] = _RIVER;
             things[( y + 2) * size + x - 2] = _RIVER;
-            off = ( y + 2) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 2) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 2) * size +  x + 2] = _RIVER;
             things[( y + 2) * size +  x + 3] = _RIVER;
             things[( y + 3) * size + x - 2] = _RIVER;
@@ -202,67 +202,67 @@ export default function flood(map, x, y, width)
             things[( y - 4) * size +  x + 2] = _RIVER;
             things[( y - 3) * size + x - 3] = _RIVER;
             things[( y - 3) * size + x - 2] = _RIVER;
-            off = ( y - 3) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 3) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 3) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 3) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 3) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 3) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 3) * size +  x + 2] = _RIVER;
             things[( y - 3) * size +  x + 3] = _RIVER;
             things[( y - 2) * size + x - 4] = _RIVER;
             things[( y - 2) * size + x - 3] = _RIVER;
-            off = ( y - 2) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 2) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 2) * size +  x + 3] = _RIVER;
             things[( y - 2) * size +  x + 4] = _RIVER;
             things[( y - 1) * size + x - 5] = _RIVER;
             things[( y - 1) * size + x - 4] = _RIVER;
-            off = ( y - 1) * size + x - 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 1) * size +  x + 4] = _RIVER;
             things[( y - 1) * size +  x + 5] = _RIVER;
             things[y * size + x - 5] = _RIVER;
             things[y * size + x - 4] = _RIVER;
-            off = y * size + x - 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = y * size + x - 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[y * size +  x + 4] = _RIVER;
             things[y * size +  x + 5] = _RIVER;
             things[( y + 1) * size + x - 5] = _RIVER;
             things[( y + 1) * size + x - 4] = _RIVER;
-            off = ( y + 1) * size + x - 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 1) * size +  x + 4] = _RIVER;
             things[( y + 1) * size +  x + 5] = _RIVER;
             things[( y + 2) * size + x - 4] = _RIVER;
             things[( y + 2) * size + x - 3] = _RIVER;
-            off = ( y + 2) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 2) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 2) * size +  x + 3] = _RIVER;
             things[( y + 2) * size +  x + 4] = _RIVER;
             things[( y + 3) * size + x - 3] = _RIVER;
             things[( y + 3) * size + x - 2] = _RIVER;
-            off = ( y + 3) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 3) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 3) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 3) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 3) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 3) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 3) * size +  x + 2] = _RIVER;
             things[( y + 3) * size +  x + 3] = _RIVER;
             things[( y + 4) * size + x - 2] = _RIVER;
@@ -288,101 +288,101 @@ export default function flood(map, x, y, width)
             things[( y - 4) * size + x - 4] = _RIVER;
             things[( y - 4) * size + x - 3] = _RIVER;
             things[( y - 4) * size + x - 2] = _RIVER;
-            off = ( y - 4) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 4) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 4) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 4) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 4) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 4) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 4) * size +  x + 2] = _RIVER;
             things[( y - 4) * size +  x + 3] = _RIVER;
             things[( y - 4) * size +  x + 4] = _RIVER;
             things[( y - 3) * size + x - 5] = _RIVER;
             things[( y - 3) * size + x - 4] = _RIVER;
             things[( y - 3) * size + x - 3] = _RIVER;
-            off = ( y - 3) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 3) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 3) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 3) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 3) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 3) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 3) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 3) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 3) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 3) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 3) * size +  x + 3] = _RIVER;
             things[( y - 3) * size +  x + 4] = _RIVER;
             things[( y - 3) * size +  x + 5] = _RIVER;
             things[( y - 2) * size + x - 5] = _RIVER;
             things[( y - 2) * size + x - 4] = _RIVER;
-            off = ( y - 2) * size + x - 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 2) * size +  x + 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 2) * size + x - 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 2) * size +  x + 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 2) * size +  x + 4] = _RIVER;
             things[( y - 2) * size +  x + 5] = _RIVER;
             things[( y - 1) * size + x - 6] = _RIVER;
             things[( y - 1) * size + x - 5] = _RIVER;
-            off = ( y - 1) * size + x - 4; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x - 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y - 1) * size +  x + 4; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 4; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y - 1) * size +  x + 4; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y - 1) * size +  x + 5] = _RIVER;
             things[( y - 1) * size +  x + 6] = _RIVER;
             things[y * size + x - 6] = _RIVER;
             things[y * size + x - 5] = _RIVER;
-            off = y * size + x - 4; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x - 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = y * size +  x + 4; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = y * size + x - 4; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x - 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = y * size +  x + 4; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[y * size +  x + 5] = _RIVER;
             things[y * size +  x + 6] = _RIVER;
             things[( y + 1) * size + x - 6] = _RIVER;
             things[( y + 1) * size + x - 5] = _RIVER;
-            off = ( y + 1) * size + x - 4; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x - 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 1) * size +  x + 4; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 4; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 1) * size +  x + 4; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 1) * size +  x + 5] = _RIVER;
             things[( y + 1) * size +  x + 6] = _RIVER;
             things[( y + 2) * size + x - 5] = _RIVER;
             things[( y + 2) * size + x - 4] = _RIVER;
-            off = ( y + 2) * size + x - 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 2) * size +  x + 3; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 2) * size + x - 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 2) * size +  x + 3; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 2) * size +  x + 4] = _RIVER;
             things[( y + 2) * size +  x + 5] = _RIVER;
             things[( y + 3) * size + x - 5] = _RIVER;
             things[( y + 3) * size + x - 4] = _RIVER;
             things[( y + 3) * size + x - 3] = _RIVER;
-            off = ( y + 3) * size + x - 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 3) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 3) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 3) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 3) * size +  x + 2; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 3) * size + x - 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 3) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 3) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 3) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 3) * size +  x + 2; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 3) * size +  x + 3] = _RIVER;
             things[( y + 3) * size +  x + 4] = _RIVER;
             things[( y + 3) * size +  x + 5] = _RIVER;
             things[( y + 4) * size + x - 4] = _RIVER;
             things[( y + 4) * size + x - 3] = _RIVER;
             things[( y + 4) * size + x - 2] = _RIVER;
-            off = ( y + 4) * size + x - 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 4) * size + x; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
-            off = ( y + 4) * size +  x + 1; if (TILE_TO_BASE_TILE[tiles[off]] !== WATER) {  tiles[off] = pickVariant(map, RIVER); things[off] = _RIVER; }
+            off = ( y + 4) * size + x - 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 4) * size + x; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
+            off = ( y + 4) * size +  x + 1; if (tiles[off] !== WATER) {  tiles[off] = RIVER; things[off] = _RIVER; }
             things[( y + 4) * size +  x + 2] = _RIVER;
             things[( y + 4) * size +  x + 3] = _RIVER;
             things[( y + 4) * size +  x + 4] = _RIVER;

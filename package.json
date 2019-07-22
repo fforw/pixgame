@@ -5,17 +5,16 @@
     "license": "Apache-2.0",
     "private": true,
     "dependencies": {
+        "delaunator": "^4.0.0",
         "performance-now": "latest",
         "pixi.js": "^5.0.4",
         "prando": "^5.1.1",
         "raf": "^3.4.1",
         "react": "^16.8.6",
         "react-dom": "^16.8.6",
-        "simplex-noise": "^2.4.0",
-        "squarestarjs": "^0.4.3"
+        "simplex-noise": "^2.4.0"
     },
     "devDependencies": {
-        "bin-pack": "^1.0.2",
         "@babel/cli": "^7.5.0",
         "@babel/core": "^7.5.4",
         "@babel/plugin-proposal-class-properties": "^7.5.0",
@@ -27,6 +26,7 @@
         "babel-loader": "^8.0.6",
         "babel-plugin-espower": "^3.0.1",
         "babel-plugin-transform-imports": "^2.0.0",
+        "bin-pack": "^1.0.2",
         "copy-webpack-plugin": "^5.0.3",
         "cross-env": "^5.2.0",
         "css-loader": "^3.0.0",
@@ -37,7 +37,8 @@
         "power-assert": "^1.6.1",
         "shelljs": "^0.8.3",
         "webpack": "^4.35.3",
-        "webpack-cli": "^3.3.5"
+        "webpack-cli": "^3.3.5",
+        "worker-loader": "^2.0.0"
     },
     "scripts": {
         "build": "node tooling/clean.js ; cross-env NODE_ENV=production webpack -p",

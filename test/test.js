@@ -1,6 +1,6 @@
 
 import assert from "power-assert";
-import simplify, { perpendicularDistance } from "../src/simplify";
+import simplify, { perpendicularDistance } from "../src/util/simplify";
 
 describe("simplify", function(){
     describe("perpendicularDistance()", function(){

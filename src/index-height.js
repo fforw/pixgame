@@ -10,9 +10,6 @@ let posX = 0, posY = 0, timerId;
 
 window.onload = () => {
 
-    const loading = document.querySelector("div.loading");
-    loading.parentNode.removeChild(loading);
-
     const size = 2048;
 
     const canvasElement = document.createElement("canvas");

@@ -21,7 +21,8 @@ module.exports = {
     mode: process.env.NODE_ENV,
     entry: {
         "main": "./src/index.js",
-        "height": "./src/index-height.js"
+        "height": "./src/index-height.js",
+        "delaunay": "./src/index-delaunay.js"
     },
 
     devtool: "source-map",
@@ -51,10 +52,18 @@ module.exports = {
             filename: "height.html"
         }),
 
+        new HtmlWebpackPlugin({
+            inject: "body",
+            chunks: ["vendors", "delaunay"],
+            template: "src/template.html",
+            filename: "delaunay.html"
+        }),
+
         new MiniCssExtractPlugin({
             filename: "bundle-[name]-[chunkhash].css",
             chunkFilename: "bundle-[id]-[chunkhash].css"
         }),
+
 
         new webpack.DefinePlugin({
             "__PROD": PRODUCTION,
@@ -67,12 +76,18 @@ module.exports = {
             PIXI: 'pixi.js'
         }),
         new CopyWebpackPlugin([
-            { from: 'atlas/atlas-*' }
+            { from: 'atlas/atlas-*' },
+            { from: 'files/css', to: "css" },
+            { from: 'files/webfonts', to: "webfonts" },
         ])
     ],
 
     module: {
         rules: [
+            {
+                test: /\.worker\.js$/,
+                use: { loader: 'worker-loader' }
+            },
             // babel transpilation ( see .babelrc for babel config)
             {
                 test: /\.js$/,

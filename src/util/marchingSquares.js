@@ -452,7 +452,7 @@ export default function marchingSquares(data, width, height, condition, outside)
             // we ignore the little diamond 4 point shapes
             if (polygon)
             {
-                if (polygon.length > 8)
+                if (polygon.length > 6)
                 {
                     //console.log("Polygon #", + id, ": length = ", polygon.length);
                     polygons.push(polygon)
