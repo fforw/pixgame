@@ -1,11 +1,16 @@
 const path = require("path");
+const util = require("util");
 const fs = require("fs");
 
 const Jimp = require("jimp");
 const pack = require('bin-pack');
 
 const ATLASES = [
-    "../atlas/src"
+    {
+        path: "../atlas/src",
+        variant : 1
+    }
+
 ];
 
 const OUTPUT_DIR = "../atlas";
@@ -67,7 +72,7 @@ function pixelPivot(frame, w, h)
 }
 
 
-function generateAtlas(atlasPath, index)
+function generateAtlas(atlasPath, index, marchingSquareCases, variant)
 {
     const curr = path.join(__dirname, atlasPath);
 
@@ -99,95 +104,199 @@ function generateAtlas(atlasPath, index)
         }
     });
 
-    Promise.all(promises).then(images => {
+    Promise.all(promises).then(
+        images =>  {
+            const promises = [];
+            images.forEach(img => {
+                if (img.id.indexOf("ms-") === 0)
+                {
+                    const { width, height } = img;
+                    if (width !== 16 || height !== 16)
+                    {
+                        throw new Error("Currently, marching cube images must be 16x16: " + JSON.stringify(img));
+                    }
 
-        const result = pack(images, {
-            inPlace: true
-        });
+                    for (let i=0; i <= 18; i++)
+                    {
+                        promises.push(
+                            Jimp.create(16, 16, 0x00000000).then(
+                                composited => {
 
-        const { width, height }  =result;
+                                    const variantValue = typeof variant === "number" ? variant : variant[img.id];
 
-        //console.log("IMAGES", images);
+                                    let caseIndex = i;
 
-        // const width = images.map(img => +img.x + img.width).reduce(reduceMax, 0);
-        // const height = images.map(img => +img.y + img.height).reduce(reduceMax, 0);
+                                    if (variantValue === 2)
+                                    {
+                                        if (i === 4 )
+                                        {
+                                            caseIndex = 19;
+                                        }
+                                        else if (i === 9)
+                                        {
+                                            caseIndex = 20;
+                                        }
+                                    }
 
-        console.log("Actual atlas dimensions: ", width, height);
+                                    composited.blit(img.img, 0, 0);
+                                    composited.mask(marchingSquareCases[caseIndex], 0, 0);
 
-        Jimp.create(width, height, 0x00000000).then(atlasImg => {
+                                    return {
+                                        ... img,
+                                        img: composited,
+                                        id: img.id + "-" + ( i + 1)
+                                    }
+                                    
+                                }
+                            )
 
-            const atlas = {frames: {}};
+                        )
+                    }
+                }
+                else
+                {
+                    promises.push(Promise.resolve(img));
+                }
+            })
 
-            images.forEach(function (bin) {
+            return Promise.all(promises);
+        })
+        .then(
+        images => {
 
-                const {x, y, width: w, height: h, img} = bin;
 
-                atlas.frames[bin.id] = {
+            const result = pack(images, {
+                inPlace: true
+            });
 
-                    // default values ...
-                    rotated: false,
-                    trimmed: false,
-                    spriteSourceSize: {
-                        x: 0,
-                        y: 0,
-                        w,
-                        h
+            const {width, height} = result;
+
+            //console.log("IMAGES", images);
+
+            // const width = images.map(img => +img.x + img.width).reduce(reduceMax, 0);
+            // const height = images.map(img => +img.y + img.height).reduce(reduceMax, 0);
+
+            console.log("Actual atlas dimensions: ", width, height);
+
+            Jimp.create(width, height, 0x00000000).then(atlasImg => {
+
+                const atlas = {frames: {}};
+
+                images.forEach(function (bin) {
+
+                    const {x, y, width: w, height: h, img} = bin;
+
+                    atlas.frames[bin.id] = {
+
+                        // default values ...
+                        rotated: false,
+                        trimmed: false,
+                        spriteSourceSize: {
+                            x: 0,
+                            y: 0,
+                            w,
+                            h
+                        },
+                        sourceSize: {
+                            w,
+                            h
+                        },
+                        pivot: {
+                            x: 0.5,
+                            y: 0.5
+                        },
+                        // ... potentially overridden by values from the atlas template
+                        ...pixelPivot(predefinedAtlas.frames[bin.id], w, h),
+
+                        // ... but not "frame"
+                        frame: {
+                            x,
+                            y,
+                            w,
+                            h
+                        },
+
+                    };
+
+                    atlasImg.blit(img, x, y)
+                });
+                const imageName = "atlas-" + index + ".png";
+
+                atlas.meta = {
+                    app: "http://ww.github.com/fforw/pixgame",
+                    version: "0.1",
+                    image: imageName,
+                    format: "RGBA8888",
+                    size: {
+                        w: width,
+                        h: height
                     },
-                    sourceSize: {
-                        w,
-                        h
-                    },
-                    pivot: {
-                        x: 0.5,
-                        y: 0.5
-                    },
-                    // ... potentially overridden by values from the atlas template
-                    ... pixelPivot(predefinedAtlas.frames[bin.id], w, h),
-
-                    // ... but not "frame"
-                    frame: {
-                        x,
-                        y,
-                        w,
-                        h
-                    },
-
+                    scale: "1"
                 };
 
-                atlasImg.blit(img, x, y)
+                fs.writeFileSync(
+                    path.join(__dirname, OUTPUT_DIR, "atlas-" + index + ".json"),
+                    JSON.stringify(atlas, null, 4),
+                    "UTF-8"
+                );
+
+                atlasImg.writeAsync(path.join(__dirname, OUTPUT_DIR, imageName));
+
             });
-            const imageName = "atlas-" + index + ".png";
 
-            atlas.meta = {
-                app: "http://ww.github.com/fforw/pixgame",
-                version: "0.1",
-                image: imageName,
-                format: "RGBA8888",
-                size: {
-                    w: width,
-                    h: height
-                },
-                scale: "1"
-            };
-
-            fs.writeFileSync(
-                path.join(__dirname, OUTPUT_DIR, "atlas-" + index + ".json"),
-                JSON.stringify(atlas, null, 4),
-                "UTF-8"
-            );
-
-            atlasImg.writeAsync(path.join(__dirname, OUTPUT_DIR, imageName));
-
-        });
-
-    })
+        })
     .catch(e => console.error("Error reading images", e))
 }
 
-
-for (let i = 0; i < ATLASES.length; i++)
+function readMarchingSquares()
 {
-    const atlasPath = ATLASES[i];
-    generateAtlas(atlasPath, i);
+    return Promise.all(
+        [
+            "case-1.png",
+            "case-2.png",
+            "case-3.png",
+            "case-4.png",
+            "case-5-1.png",
+            "case-6.png",
+            "case-7.png",
+            "case-8.png",
+            "case-9.png",
+            "case-10-1.png",
+            "case-11.png",
+            "case-12.png",
+            "case-13.png",
+            "case-14.png",
+            "case-15.png",
+            "case-m1.png",
+            "case-m2.png",
+            "case-m3.png",
+            "case-m4.png",
+            "case-5-2.png", // 18
+            "case-10-2.png", // 19
+        ].map(
+            name => Jimp.read(
+                path.join(
+                    __dirname,
+                    "ms-masks/" + name
+                )
+            )
+        )
+    );
 }
+
+
+readMarchingSquares().then( marchingSquareCases => {
+    console.log("MS", marchingSquareCases);
+
+    for (let i = 0; i < ATLASES.length; i++)
+    {
+        const { path, variant } = ATLASES[i];
+        generateAtlas(path, i, marchingSquareCases, variant);
+    }
+})
+
+
+
+
+
 
