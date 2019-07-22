@@ -5,7 +5,6 @@
     "license": "Apache-2.0",
     "private": true,
     "dependencies": {
-        "delaunator": "^4.0.0",
         "performance-now": "latest",
         "pixi.js": "^5.0.4",
         "prando": "^5.1.1",
