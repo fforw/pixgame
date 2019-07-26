@@ -3,14 +3,16 @@ import Prando from "prando"
 import now from "performance-now"
 import flood from "./flood";
 import marchingSquares from "./util/marchingSquares";
-import simplify, { perpendicularDistance } from "./util/simplify";
-import Delaunay from "./Delaunay";
+import simplify from "./util/simplify";
+import Delaunay from "./util/Delaunay";
+import { linesCross } from "./util/intersection";
 
+import RTree from "rtree"
 
 const TAU = Math.PI * 2;
 
 const N1 = 0.4;
-const N2 = 1.4;
+const N2 = 1.7;
 const N3 = 20;
 const N4 = 5;
 
@@ -23,6 +25,7 @@ function clamp(v)
     return v < -1 ? -1 : v > 1 ? 1 : v;
 }
 
+const SERIALIZED_MAP = "Map serialization";
 
 const WATER_LINE = 0.05;
 const BEACH_LINE = 0.07;
@@ -50,17 +53,21 @@ export const PLANT_3 = 4;
 export const DOT = 5;
 export const _RIVER = 6;
 export const _WOODS = 7;
-export const BLOCKED = 8;   // non-walkable from here on
-export const _WATER = 9;
-export const LARGE_TREE = 10;
-export const LARGE_TREE_2 = 11;
-export const SMALL_TREE = 12;
-export const SMALL_TREE_2 = 13;
-export const SMALL_TREE_3 = 14;
-export const BOULDER = 15;
-export const BOULDER_2 = 16;
-export const BOULDER_3 = 17;
-export const HOUSE = 18;
+export const SENSOR = 8;
+export const _SAND = 9;
+export const _ICE = 10;
+export const BLOCKED = 11;   // non-walkable from here on
+export const _WATER = 12;
+export const LARGE_TREE = 13;
+export const LARGE_TREE_2 = 14;
+export const SMALL_TREE = 15;
+export const SMALL_TREE_2 = 16;
+export const SMALL_TREE_3 = 17;
+export const BOULDER = 18;
+export const BOULDER_2 = 19;
+export const BOULDER_3 = 20;
+export const HOUSE = 21;
+export const IGLOO = 22;
 
 
 function calcWeightSum(array)
@@ -79,7 +86,7 @@ function calcWeightSum(array)
 }
 
 
-const tileNames = [
+export const tileNames = [
     "DARK",
     "WATER",
     "SAND",
@@ -88,7 +95,61 @@ const tileNames = [
     "ROCK",
     "WOODS",
     "WOODS2",
-    "RIVER"
+    "RIVER",
+    "ICE",
+    "ICE2"
+];
+
+export const thingNames = [
+    "-",
+    "EMPTY",
+    "PLANT",
+    "PLANT_2",
+    "PLANT_3",
+    "DOT",
+    "_RIVER",
+    "_WOODS",
+    "SENSOR",
+    "_SAND",
+    "BLOCKED",
+    "_WATER",
+    "LARGE_TREE",
+    "LARGE_TREE_2",
+    "SMALL_TREE",
+    "SMALL_TREE_2",
+    "SMALL_TREE_3",
+    "BOULDER",
+    "BOULDER_2",
+    "BOULDER_3",
+    "HOUSE",
+    "IGLOO"
+];
+
+const thingWalkability = [
+
+    1, // EMPTY
+    1, // PLANT
+    1, // PLANT_2
+    1, // PLANT_3
+    1, // DOT
+    3, // _RIVER
+    1, // _WOODS
+    1, // SENSOR
+    2, // _SAND
+    1.5, // _ICE
+    4, // BLOCKED
+    4, // _WATER
+    4, // LARGE_TREE
+    4, // LARGE_TREE_2
+    3, // SMALL_TREE
+    3, // SMALL_TREE_2
+    3, // SMALL_TREE_3
+    4, // BOULDER
+    3, // BOULDER_2
+    4, // BOULDER_3
+    4, // HOUSE
+    4, // IGLOO
+
 ];
 
 
@@ -130,10 +191,10 @@ function normalizeSpawnTable(table)
 
 const spawnTable = normalizeSpawnTable({
     [WATER]: [_WATER, 1],
-    [SAND]: [0, 500, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
+    [SAND]: [_SAND, 750, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
     [GRASS]: [
         0,
-        1000,
+        2000,
         LARGE_TREE,
         2,
         LARGE_TREE_2,
@@ -170,7 +231,7 @@ const spawnTable = normalizeSpawnTable({
     [ROCK]: [BLOCKED, 4, BOULDER, 1, BOULDER_3, 1, BOULDER_2, 1],
     [WOODS]: [
         _WOODS,
-        150,
+        200,
         LARGE_TREE,
         2,
         LARGE_TREE_2,
@@ -196,7 +257,7 @@ const spawnTable = normalizeSpawnTable({
     ],
     [WOODS2]: [
         _WOODS,
-        40,
+        70,
         LARGE_TREE,
         2,
         LARGE_TREE_2,
@@ -220,7 +281,9 @@ const spawnTable = normalizeSpawnTable({
         BOULDER_2,
         2
     ],
-    [RIVER]: [_RIVER, 1]
+    [RIVER]: [_RIVER, 1],
+    [ICE]: [_ICE, 1],
+    [ICE2]: [_ICE, 1]
 });
 
 function spawn(map, spawns)
@@ -244,7 +307,9 @@ function spawn(map, spawns)
 
 function spawnForBlock(map, mapOffset, tile)
 {
-    const {things, size, sizeMask} = map;
+    const {things, size } = map;
+
+    const worldMask = (size * size)-1
 
     if (things[mapOffset] !== 0)
     {
@@ -263,37 +328,38 @@ function spawnForBlock(map, mapOffset, tile)
             if (thing === LARGE_TREE || thing === LARGE_TREE_2)
             {
 
-                const prev3Offset = (mapOffset - 3) & sizeMask;
-                const prev2Offset = (mapOffset - 2) & sizeMask;
-                const prevOffset = (mapOffset - 1) & sizeMask;
-                const nextOffset = (mapOffset + 1) & sizeMask;
-                const next2Offset = (mapOffset + 2) & sizeMask;
-                const next3Offset = (mapOffset + 3) & sizeMask;
+                const prev3Offset = (mapOffset - 3) & worldMask;
+                const prev2Offset = (mapOffset - 2) & worldMask;
+                const prevOffset = (mapOffset - 1) & worldMask;
+                const nextOffset = (mapOffset + 1) & worldMask;
+                const next2Offset = (mapOffset + 2) & worldMask;
+                const next3Offset = (mapOffset + 3) & worldMask;
 
                 if (
-                    things[prev3Offset] !== BLOCKED &&
-                    things[prev2Offset] !== BLOCKED &&
-                    things[prevOffset] !== BLOCKED
+                    things[prev3Offset] !== BLOCKED && things[prev3Offset] !== EMPTY &&
+                    things[prev2Offset] !== BLOCKED && things[prev2Offset] !== EMPTY &&
+                    things[prevOffset] !== BLOCKED  && things[prevOffset] !== EMPTY
                 )
                 {
 
                     things[mapOffset] = thing;
+                    things[prevOffset] = BLOCKED;
                     things[nextOffset] = BLOCKED;
-                    things[next2Offset] = BLOCKED;
-                    things[next3Offset] = BLOCKED;
+                    things[next2Offset] = EMPTY;
+                    things[next3Offset] = EMPTY;
 
                     //console.log("Block for large tree", mapOffset)
                 }
             }
             else if (thing === BOULDER || thing === BOULDER_3)
             {
-                const prevOffset = (mapOffset - 1) & sizeMask;
-                const nextOffset = (mapOffset + 1) & sizeMask;
+                const prevOffset = (mapOffset - 1) & worldMask;
+                const nextOffset = (mapOffset + 1) & worldMask;
 
                 //baseTile === ROCK && console.log("isLargeBoulder", things[prevOffset], things[mapOffset], things[nextOffset])
 
                 if (
-                    things[prevOffset] !== BLOCKED
+                    things[prevOffset] !== BLOCKED && things[prevOffset] !== EMPTY
                 )
                 {
 
@@ -301,6 +367,13 @@ function spawnForBlock(map, mapOffset, tile)
                     things[nextOffset] = BLOCKED;
                     //console.log("Block for large boulder", mapOffset)
                 }
+            }
+            else if (thing === SMALL_TREE || thing === SMALL_TREE_2 || thing === SMALL_TREE_3)
+            {
+                const nextOffset = (mapOffset + 1) & worldMask;
+
+                things[mapOffset] = thing;
+                things[nextOffset] = EMPTY;
             }
             else
             {
@@ -317,7 +390,7 @@ function determineTile(map, x, y, climate)
     const coords = map.heightCoords(x, y);
     const n = map.heightFn(x, y, coords, nCoords);
 
-    climate = clamp(climate - n * 0.96 + nCoords[1] * 0.2);
+    climate = clamp(climate - n * 0.96 + nCoords[1] * 0.2 + map.random.next() * 0.004 );
 
 
     let result;
@@ -400,7 +473,7 @@ function createBase(size, seed, updateProgress, percent)
 
     let mapOffset = 0;
 
-    const report = (size / 20)|0
+    const report = (size / 20)|0;
 
 
     const climateStep = TAU / 2 / size;
@@ -462,10 +535,10 @@ function randomProbes(map)
 
 
 const directions = [
-    0, -1,
-    -1, 0,
     1, 0,
-    0, 1
+    0, 1,
+    -1, 0,
+    0, -1
 ];
 
 
@@ -542,10 +615,8 @@ function removeDuplicates(probes)
 }
 
 
-function jitter(map, filtered, amount = 8)
+function jitter(map, filtered, amount = 7)
 {
-    const twice = amount * 2;
-
     const multis = [];
     for (let i = 0; i < filtered.length; i++)
     {
@@ -563,8 +634,8 @@ function jitter(map, filtered, amount = 8)
                 {
                     ...probe,
                     points: [],
-                    x: (probe.x - amount - yOff) | 0,
-                    y: (probe.y - amount + xOff) | 0
+                    x: (probe.x - xOff) | 0,
+                    y: (probe.y - yOff) | 0
                 }
             );
         }
@@ -971,45 +1042,601 @@ export function isPointInPolygon(x, y, poly)
  * @param {WorldMap} map    map
  * @param {Array<number>} vertices
  * @param {Array<number>} triangles
+ * @param {Uint8Array} mask
  * @return {Array<number>} walkable triangles
  */
-function filterWalkable(map, vertices, triangles)
+function filterWalkable(map, vertices, triangles, mask)
 {
-    return triangles;
+    const walkable = [];
+
+    const { size } = map;
+
+    for (let i = 0; i < triangles.length; i += 3)
+    {
+        const offsetA = triangles[i];
+        const offsetB = triangles[i + 1];
+        const offsetC = triangles[i + 2];
+
+        const x0 = vertices[offsetA];
+        const y0 = vertices[offsetA + 1];
+        const x1 = vertices[offsetB];
+        const y1 = vertices[offsetB + 1];
+        const x2 = vertices[offsetC];
+        const y2 = vertices[offsetC + 1];
+
+        const cx = ((x0 + x1 + x2) / 3)|0;
+        const cy = ((y0 + y1 + y2) / 3)|0;
+
+        if (mask[cy * size + cx])
+        {
+            walkable.push(offsetA, offsetB, offsetC);
+        }
+    }
+
+    return walkable;
 }
 
 
 const SIMPLIFICATION_EPSILON = 2.5;
 
 
-function planRoads(map, cities)
+/**
+ * Creates a flat array containing minX,maxX,minY,maxY of all our simplified polygons.
+ * 
+ * @param {Array<Array<Number>>} polygons   array of point arrays
+ * @return {Array<Number>} min/max values in groups of four
+ */
+export function polyMinMax(polygons)
 {
+    const minMax = new Array(polygons.length * 4);
+
+    let off = 0;
+    for (let i = 0; i < polygons.length; i++)
+    {
+        const polygon = polygons[i];
+
+        let minX = polygon[0];
+        let maxX = minX;
+        let minY = polygon[1];
+        let maxY = minY;
+
+        for (let i = 2; i < polygon.length; i += 2 )
+        {
+            const x = polygon[i];
+            const y = polygon[i + 1];
+
+            if (x < minX)
+            {
+                minX = x;
+            }
+            else if (x > maxX)
+            {
+                maxX = x;
+            }
+            
+            if (y < minY)
+            {
+                minY = y;
+            }
+            else if (y > maxY)
+            {
+                maxY = y;
+            }
+        }
+
+        minMax[off++] = minX;
+        minMax[off++] = maxX;
+        minMax[off++] = minY;
+        minMax[off++] = maxY;
+    }
+
+    return minMax;
+}
+
+const xCoords = new Array(256);
+
+export function xOrFillPolygon(mask, polygon, size, minMax, minMaxOff)
+{
+    const minY = minMax[minMaxOff];
+    const maxY = minMax[minMaxOff + 1];
+
+    let line = ((minY)|0) * size;
+    for( let y = minY; y <= maxY; y++)
+    {
+        const { length } = polygon;
+
+        let prevX = polygon[ length - 2];
+        let prevY = polygon[ length - 1];
+
+        let count = 0;
+        for (let i = 0; i < length; i += 2)
+        {
+            const currX = polygon[i];
+            const currY = polygon[i + 1];
+            if (currY > y !== prevY > y)
+            {
+                const x = currX + (prevX - currX) * (y - currY) / (prevY - currY);
+
+                // Insert sort intersection X into sorted points
+                let inserted = false;
+                for (let j = 0; j < count; j++)
+                {
+                    if (x < xCoords[j])
+                    {
+                        for (let k = count; k > j; k--)
+                        {
+                            xCoords[k] = xCoords[k - 1];
+                        }
+                        count++;
+                        xCoords[j] = x;
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted)
+                {
+                    xCoords[count++] = x;
+                }
+
+            }
+            prevX = currX;
+            prevY = currY;
+        }
+
+        //console.log("SORTED", xCoords.slice(0, count))
+
+        if (count > 0)
+        {
+            let inPolygon = true;
+            prevX = xCoords[0] | 0;
+            for (let i = 1; i < count; i++)
+            {
+                const currX = xCoords[i] | 0;
+                if (inPolygon)
+                {
+                    for (let x = prevX; x <= currX; x++)
+                    {
+                        mask[line + x ] ^= 1;
+                    }
+                }
+                prevX = currX;
+                inPolygon = !inPolygon;
+            }
+        }
+
+        line += size;
+    }
+}
+
+
+/**
+ * Creates a binary mask for the given array of n-sided polygons.
+ *
+ * @param polygons
+ * @param size
+ * @return {Uint8Array}
+ */
+function createMask(polygons, size, minMax)
+{
+    const mask = new Uint8Array(size * size);
+
+
+    for (let i = 0; i < polygons.length; i++)
+    {
+        const polygon = polygons[i];
+        xOrFillPolygon(mask, polygon, size, minMax, i * 4 + 2);
+    }
+    return mask;
+}
+
+
+
+
+const otherTriResult = [0,0]
+
+/**
+ * "Flips" all triangles for which an edge crosses the original n-sided polygon edge.
+ *
+ * Flipping takes the two triangles with that edge and creates two new triangles eliminating
+ * the erroneous edge and replacing it with the crossing edge.
+ *
+ * @param vertices      flat vertices
+ * @param triangles     triangles
+ * @param polygons      array of original polygons
+ * @param minMax        minMax for polygons (minX,maxX,minY,maxY, ...)
+ */
+function flipWronglyTriangulated(vertices, triangles, polygons, minMax)
+{
+    for (let i = 0; i < triangles.length; i += 3)
+    {
+        const offsetA = triangles[i];
+        const offsetB = triangles[i + 1];
+        const offsetC = triangles[i + 2];
+
+        const x0 = vertices[offsetA];
+        const y0 = vertices[offsetA + 1];
+        const x1 = vertices[offsetB];
+        const y1 = vertices[offsetB + 1];
+        const x2 = vertices[offsetC];
+        const y2 = vertices[offsetC + 1];
+
+        let minMaxOff = 0;
+        for (let j = 0; j < polygons.length; j++)
+        {
+            const polygon = polygons[j];
+
+            const minX = minMax[minMaxOff];
+            const maxX = minMax[minMaxOff + 1];
+            const minY = minMax[minMaxOff + 2];
+            const maxY = minMax[minMaxOff + 3];
+
+
+            // check collision n-gon bounding box
+            const inBoundingBox = (x0 >= minX && x0 <= maxX && y0 >= minY && y0 <= maxY) ||
+                      (x1 >= minX && x1 <= maxX && y1 >= minY && y1 <= maxY) ||
+                      (x2 >= minX && x2 <= maxX && y2 >= minY && y2 <= maxY);
+            if (
+                inBoundingBox
+            )
+            {
+                let prevX = polygon[polygon.length - 2];
+                let prevY = polygon[polygon.length - 1];
+
+                for (let k = 0; k < polygon.length; k += 2)
+                {
+                    const currX = polygon[k];
+                    const currY = polygon[k + 1];
+
+                    let flipAOffset = -1;
+                    let flipBOffset = -1;
+                    let nonFlipOffset = -1;
+
+                    if (linesCross(prevX, prevY, currX, currY, x0, y0, x1, y1))
+                    {
+                        flipAOffset = offsetA;
+                        flipBOffset = offsetB;
+                        nonFlipOffset = offsetC;
+                    }
+                    else if (linesCross(prevX, prevY, currX, currY, x0, y0, x2, y2))
+                    {
+                        flipAOffset = offsetA;
+                        flipBOffset = offsetC;
+                        nonFlipOffset = offsetB;
+
+                    }
+                    else if (linesCross(prevX, prevY, currX, currY, x1, y1, x2, y2))
+                    {
+                        flipAOffset = offsetB;
+                        flipBOffset = offsetC;
+                        nonFlipOffset = offsetA;
+                    }
+
+                    if (flipAOffset >= 0)
+                    {
+                        let triOff = -1, otherNonFlipOffset;
+                        for (let l = 0; l < triangles.length; l += 3)
+                        {
+                            if (i !== l)
+                            {
+                                const offsetA = triangles[l];
+                                const offsetB = triangles[l + 1];
+                                const offsetC = triangles[l + 2];
+
+                                const fAA = flipAOffset === offsetA;
+                                const fAB = flipAOffset === offsetB;
+                                const fAC = flipAOffset === offsetC;
+
+                                const fBA = flipBOffset === offsetA;
+                                const fBB = flipBOffset === offsetB;
+                                const fBC = flipBOffset === offsetC;
+
+                                if (fAA && fBB || fBA && fAB)
+                                {
+                                    triOff = l;
+                                    otherNonFlipOffset = offsetC;
+                                    break;
+                                }
+                                else if (fAA && fBC || fBA && fAC)
+                                {
+                                    triOff = l;
+                                    otherNonFlipOffset = offsetB;
+                                    break;
+                                }
+                                else if (fAB && fBC || fBB && fAC)
+                                {
+                                    triOff = l;
+                                    otherNonFlipOffset = offsetA;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (triOff >= 0)
+                        {
+                            triangles[i] = nonFlipOffset;
+                            triangles[i + 1] = otherNonFlipOffset;
+                            triangles[i + 2] = flipAOffset;
+
+                            triangles[triOff] = nonFlipOffset;
+                            triangles[triOff + 1] = otherNonFlipOffset;
+                            triangles[triOff + 2] = flipBOffset;
+                        }
+                    }
+
+                    prevX = currX;
+                    prevY = currY;
+                }
+                    
+            }
+
+            minMaxOff += 4;
+        }
+    }
+}
+
+
+/**
+ * Returns true if the given point is wihtin the given triangle.
+ *
+ * @param {Number} ax   x-coordinate A
+ * @param {Number} ay   y-coordinate A
+ * @param {Number} bx   x-coordinate B
+ * @param {Number} by   y-coordinate B
+ * @param {Number} cx   x-coordinate C
+ * @param {Number} cy   y-coordinate C
+ * @param {Number} px   x-coordinate of point
+ * @param {Number} py   y-coordinate of point
+ *
+ * @return {boolean} true if point in triangle
+ */
+export function isPointInTriangle(ax, ay, bx, by, cx, cy, px, py)
+{
+    const v0x = cx - ax;
+    const v0y = cy - ay;
+    const v1x = bx - ax;
+    const v1y = by - ay;
+    const v2x = px - ax;
+    const v2y = py - ay;
+
+    const dot00 = v0x * v0x + v0y * v0y;
+    const dot01 = v0x * v1x + v0y * v1y;
+    const dot02 = v0x * v2x + v0y * v2y;
+    const dot11 = v1x * v1x + v1y * v1y;
+    const dot12 = v1x * v2x + v1y * v2y;
+
+    const denom = (dot00 * dot11 - dot01 * dot01);
+
+    // collinear or singular triangle
+    if ( denom === 0 ) {
+        return false;
+    }
+
+    const invDenom = 1 / denom;
+    const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+    const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+    return (u >= 0) && (v >= 0) && (u + v < 1);
+}
+
+
+/**
+ * Checks the things on the edge line and scores their walkability.
+ *
+ * Uses a modified "manhattan" Bresenham line algorithm that does not move diagonally.
+ *
+ * @param {WorldMap} map            world map
+ * @param {array} vertices          vertices array
+ * @param {Number} startOffset      offset for starting point
+ * @param {Number} endOffset        offset for end point
+ * 
+ * @returns {Number}
+ */
+function calculateEdgeCost(map, vertices, startOffset, endOffset)
+{
+    let x0 = vertices[startOffset]|0;
+    let y0 = vertices[startOffset + 1]|0;
+    let x1 = vertices[endOffset]|0;
+    let y1 = vertices[endOffset + 1]|0;
+
+
+    const xDist = Math.abs(x1 - x0);
+    const yDist = -Math.abs(y1 - y0);
+    const xStep = (x0 < x1 ? +1 : -1);
+    const yStep = (y0 < y1 ? +1 : -1);
+    let error = xDist + yDist;
+
+    let score = thingWalkability[map.getThing(x0, y0)];
+    while (x0 !== x1 || y0 !== y1)
+    {
+        if (2 * error - yDist > xDist - 2 * error)
+        {
+            // horizontal step
+            error += yDist;
+            x0 += xStep;
+        }
+        else
+        {
+            // vertical step
+            error += xDist;
+            y0 += yStep;
+        }
+
+        score += thingWalkability[map.getThing(x0, y0)];
+    }
+
+    return score;
+}
+
+
+function insert(nodes, map, vertices, id, x, y, connectedA, connectedB)
+{
+    let entry = nodes[id];
+    const costA = calculateEdgeCost(map, vertices, id << 1, connectedA << 1);
+    const costB = calculateEdgeCost(map, vertices, id << 1, connectedB << 1);
+    if (!entry)
+    {
+        nodes[id] = {
+            x,
+            y,
+            to: [
+                connectedA,
+                connectedB
+            ],
+            cost: [
+                costA,
+                costB
+            ]
+        }
+    }
+    else
+    {
+        if (entry.to.indexOf(connectedA) < 0)
+        {
+            entry.to.push(connectedA);
+            entry.cost.push(costA);
+        }
+        if (entry.to.indexOf(connectedB) < 0)
+        {
+            entry.to.push(connectedB);
+            entry.cost.push(costB);
+        }
+    }
+}
+
+
+function buildNavigationMesh(map, vertices, triangles)
+{
+    const nodes = new Array(vertices.length >> 1);
+
+    const rTree = new RTree(10);
+
+    for (let i = 0; i < triangles.length; i += 3)
+    {
+        const offsetA = triangles[i];
+        const offsetB = triangles[i + 1];
+        const offsetC = triangles[i + 2];
+
+        const nodeA = offsetA >> 1;
+        const nodeB = offsetB >> 1;
+        const nodeC = offsetC >> 1;
+
+        const x0 = vertices[offsetA];
+        const y0 = vertices[offsetA + 1];
+        const x1 = vertices[offsetB];
+        const y1 = vertices[offsetB + 1];
+        const x2 = vertices[offsetC];
+        const y2 = vertices[offsetC + 1];
+
+
+        insert(nodes, map, vertices, nodeA, x0, y0, nodeB, nodeC);
+        insert(nodes, map, vertices, nodeB, x1, y1, nodeA, nodeC);
+        insert(nodes, map, vertices, nodeC, x2, y2, nodeA, nodeB);
+
+
+        let minX = x0;
+        let minY = y0;
+        let maxX = x0;
+        let maxY = y0;
+
+        if (x1 < minX)
+        {
+            minX = x1;
+        }
+        if (x1 > maxX)
+        {
+            maxX = x1;
+        }
+        if (y1 < minY)
+        {
+            minY = y1;
+        }
+        if (y1 > maxY)
+        {
+            maxY = y1;
+        }
+
+        if (x2 < minX)
+        {
+            minX = x2;
+        }
+        if (x2 > maxX)
+        {
+            maxX = x2;
+        }
+        if (y2 < minY)
+        {
+            minY = y2;
+        }
+        if (y2 > maxY)
+        {
+            maxY = y2;
+        }
+
+        const bb = {
+            x: minX,
+            y: minY,
+            w: maxX - minX,
+            h: maxY - minY
+        };
+        //console.log("INSERT", bb, i);
+
+        rTree.insert(bb, i);
+    }
+
+    const navMesh = {
+        nodes,
+        rTree,
+        triangles,
+        vertices,
+    };
+
+    return navMesh;
+}
+
+
+function planRoads(map, cities, updateProgress, percent, start)
+{
+    const remaining = 100 - percent;
+
     const polygons = marchingSquares(map.things, map.size, map.size, t => t >= BLOCKED, true);
 
-    console.log("MARCHING-CUBE: polygons = ", polygons.length, ", vertexes = ", polygons.reduce((count, array) => count + array.length, 0));
+    updateProgress && updateProgress(0.8);
+
+    console.log("MARCHING-CUBE: polygons = ", polygons.length, ", vertexes = ", polygons.reduce((count, array) => count + array.length, 0), (now() - start ) + "ms");
 
     const simplified = polygons.map(p => simplify(p, SIMPLIFICATION_EPSILON, true)).filter(p => p.length > 6);
 
-    console.log("SIMPLIFIED: polygons = ", simplified.length, ", vertexes = ", simplified.reduce((count, array) => count + array.length, 0));
+    console.log("SIMPLIFIED: polygons = ", simplified.length, ", vertexes = ", simplified.reduce((count, array) => count + array.length, 0), (now() - start ) + "ms");
+
+    const minMax = polyMinMax(simplified);
+    const mask = createMask(simplified, map.size, minMax);
 
     const vertices = flatten(simplified);
     const triangles = Delaunay.triangulate(vertices);
 
-    console.log("DELAUNAY: triangles", triangles.length / 3, ", vertexes = ", triangles.length);
+    flipWronglyTriangulated(vertices, triangles, simplified, minMax)
 
-    const walkable = filterWalkable(map, vertices, triangles);
+    updateProgress && updateProgress(0.98);
+    console.log("DELAUNAY: triangles", triangles.length / 3, ", vertexes = ", triangles.length, (now() - start ) + "ms");
 
-    console.log("WALKABLE: triangles", walkable.length / 3, ", vertexes = ", walkable.length);
+    const walkable = filterWalkable(map, vertices, triangles, mask);
 
-    map.vertices = vertices;
-    map.polygons = simplified;
-    map.triangles = walkable;
+    console.log("WALKABLE: triangles", walkable.length / 3, ", vertexes = ", walkable.length, (now() - start ) + "ms");
+
+    const navMesh = buildNavigationMesh(map, vertices, walkable);
+    console.log("NAV-MESH: ", (now() - start ) + "ms");
+
+    map.mask = mask;
+    map.navMesh = navMesh;
 }
 
 
+
+
 export default class WorldMap {
-    constructor(size = 800, seed, tiles, things)
+    constructor(size = 800, seed, tiles, things, sensors, navMesh, mask, worldId)
     {
+        this.worldId = worldId;
         const lg = Math.log(size) / Math.log(2);
         if ((lg % 1) !== 0)
         {
@@ -1028,6 +1655,11 @@ export default class WorldMap {
         this.factor = 1 / size;
         this.tiles = tiles || new Uint8Array(size * size);
         this.things = things || new Uint8Array(size * size);
+        this.sensors = sensors || {};
+
+        this.navMesh = navMesh || null;
+        this.mask = mask || null;
+        this.worldId = worldId;
     }
 
 
@@ -1051,7 +1683,54 @@ export default class WorldMap {
 
     putThing(x, y, thing)
     {
+        if (__DEV)
+        {
+            if (thing === SENSOR)
+            {
+                throw new Error("Cannot just put sensor. Sensors need to be registered with registerSensor");
+            }
+        }
+
         this.things[(y & this.sizeMask) * this.size + (x & this.sizeMask)] = thing;
+    }
+
+
+    registerSensor(x, y, sensor)
+    {
+        const off = (y & this.sizeMask) * this.size + (x & this.sizeMask);
+        this.things[off] = SENSOR;
+        this.sensors[off] = sensor;
+
+    }
+
+    lookupSensor(x,y, dx, dy)
+    {
+        
+
+        const off = (y & this.sizeMask) * this.size + (x & this.sizeMask);
+        const sensor = this.sensors[off];
+
+        if (sensor.options.fromDirections & 1 << direction)
+        {
+
+        }
+
+        return sensor;
+    }
+
+    unregisterSensor(x, y, sensor)
+    {
+
+        const off = (y & this.sizeMask) * this.size + (x & this.sizeMask);
+
+        const existing = this.things[off];
+        if (existing !== SENSOR)
+        {
+            throw new Error("Error deregistering sensor: tile is a " + thingNames[existing]);
+        }
+
+        this.things[off] = 0;
+        delete this.sensors[off];
     }
 
 
@@ -1152,67 +1831,109 @@ export default class WorldMap {
                 switch (tile)
                 {
                     case RIVER:
-                        data[dataOffset++] = 128;
-                        data[dataOffset++] = 128;
-                        data[dataOffset++] = 255;
+                        data[dataOffset++] = 51;
+                        data[dataOffset++] = 152;
+                        data[dataOffset++] = 208;
                         data[dataOffset++] = 255;
                         break;
                     case WATER:
-                        data[dataOffset++] = 0;
-                        data[dataOffset++] = 32;
-                        data[dataOffset++] = 128;
+                        data[dataOffset++] = 28;
+                        data[dataOffset++] = 142;
+                        data[dataOffset++] = 203;
                         data[dataOffset++] = 255;
                         break;
                     case SAND:
-                        data[dataOffset++] = 192;
-                        data[dataOffset++] = 160;
-                        data[dataOffset++] = 0;
+                        data[dataOffset++] = 240;
+                        data[dataOffset++] = 224;
+                        data[dataOffset++] = 93;
                         data[dataOffset++] = 255;
                         break;
                     case GRASS:
-                        data[dataOffset++] = 0;
-                        data[dataOffset++] = 128;
-                        data[dataOffset++] = 0;
+                        data[dataOffset++] = 28;
+                        data[dataOffset++] = 184;
+                        data[dataOffset++] = 79;
                         data[dataOffset++] = 255;
                         break;
                     case WOODS:
-                        data[dataOffset++] = 0;
-                        data[dataOffset++] = 108;
-                        data[dataOffset++] = 16;
+                        data[dataOffset++] = 29;
+                        data[dataOffset++] = 149;
+                        data[dataOffset++] = 75;
                         data[dataOffset++] = 255;
                         break;
                     case WOODS2:
-                        data[dataOffset++] = 0;
-                        data[dataOffset++] = 64;
-                        data[dataOffset++] = 32;
+                        data[dataOffset++] = 25;
+                        data[dataOffset++] = 124;
+                        data[dataOffset++] = 66;
                         data[dataOffset++] = 255;
                         break;
                     case DIRT:
-                        data[dataOffset++] = 64;
-                        data[dataOffset++] = 64;
-                        data[dataOffset++] = 0;
+                        data[dataOffset++] = 170;
+                        data[dataOffset++] = 126;
+                        data[dataOffset++] = 73;
                         data[dataOffset++] = 255;
                         break;
                     case ROCK:
-                        data[dataOffset++] = 100;
-                        data[dataOffset++] = 100;
-                        data[dataOffset++] = 100;
+                        data[dataOffset++] = 170;
+                        data[dataOffset++] = 170;
+                        data[dataOffset++] = 170;
                         data[dataOffset++] = 255;
                         break;
                     case ICE:
-                        data[dataOffset++] = 248;
-                        data[dataOffset++] = 248;
+                        data[dataOffset++] = 236;
+                        data[dataOffset++] = 254;
                         data[dataOffset++] = 255;
                         data[dataOffset++] = 255;
                         break;
                     case ICE2:
-                        data[dataOffset++] = 220;
-                        data[dataOffset++] = 220;
+                        data[dataOffset++] = 214;
+                        data[dataOffset++] = 245;
                         data[dataOffset++] = 255;
                         data[dataOffset++] = 255;
                         break;
+                    case DARK:
+                        data[dataOffset++] = 17;
+                        data[dataOffset++] = 17;
+                        data[dataOffset++] = 17;
+                        data[dataOffset++] = 255;
+
+                        break;
                 }
+
+
+
+
+                // atlas/src/ms-river.png
+
+
+
+
+                // atlas/src/ms-rock.png
+
+
+
+
+                // atlas/src/ms-sand.png
+
+
+
+
+                // atlas/src/ms-water.png
+
+
+
+
+                // atlas/src/ms-woods2.png
+
+
+
+
+                // atlas/src/ms-woods.png
+
+
+
+
             }
+
         }
 
         return imageData;
@@ -1228,43 +1949,58 @@ export default class WorldMap {
 
     serialize()
     {
-        return {
-            "_": "Map serialization",
+        const { vertices, triangles } = this.navMesh;
 
+        return {
+            "_": SERIALIZED_MAP,
+
+            worldId: this.worldId,
             size: this.size,
             seed: this.random._seed,
             tiles: this.tiles,
-            things: this.things
+            things: this.things,
+            sensors: this.sensors,
+            meshData: {
+                vertices,
+                triangles
+            },
+            mask: this.mask
         }
     }
 
     static deserialize(obj)
     {
-        //console.log("DESERIALIZE", obj);
-        const {size, seed, things, tiles} = obj;
+        const { worldId, size, seed, things, tiles, sensors, mask, meshData } = obj;
 
-
-        return new WorldMap(
+        const map = new WorldMap(
             size,
             seed,
             tiles,
-            things
+            things,
+            sensors,
+            null,
+            mask,
+            worldId
         );
+
+        map.navMesh = buildNavigationMesh(map, meshData.vertices, meshData.triangles);
+
+        return map;
     }
 
     static generate(size, seed = new Date().getTime(), updateProgress)
     {
 
         const start = now();
-        const map = createBase(size, seed, updateProgress, 0.75);
+        const map = createBase(size, seed, updateProgress, 0.64);
         const afterBase = now();
         const rivers = drawRivers(map);
         const afterRivers = now();
-        updateProgress && updateProgress(0.87);
+        updateProgress && updateProgress(0.72);
         const cities = planCities(map, rivers);
         const afterCities = now();
 
-        planRoads(map, cities);
+        planRoads(map, cities, updateProgress, 0.72, start);
         updateProgress && updateProgress(1);
 
         const end = now();
@@ -1279,3 +2015,5 @@ export default class WorldMap {
     };
 
 }
+
+

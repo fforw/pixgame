@@ -35,7 +35,7 @@ Jimp.read(path.join(__dirname, "../src/assets/river-mask.png")).then(img => {
                          (xNotNull ? (Math.sign(mx) > 0 ? " x + " : "x - ") + Math.abs(mx) : "x") ;
                     if (data[offset])
                     {
-                        s += "    things[" + offsetExpression + "] = _RIVER;\n";
+                        s += "    things[" + offsetExpression + "] = EMPTY;\n";
                     }
                     else
                     {

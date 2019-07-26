@@ -135,4 +135,18 @@ describe("simplify", function(){
 
 
 	});
+
+	it("finally", () => {
+
+	    try
+        {
+
+            console.log("return");
+            return;
+        }
+        finally
+        {
+            console.log("finally");
+        }
+    })
 });

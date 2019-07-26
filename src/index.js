@@ -1,11 +1,19 @@
 import * as PIXI from "pixi.js"
 import "./pixi-tilemap"
+import React from "react"
+import ReactDOM from "react-dom"
 // noinspection ES6UnusedImports
 import STYLES from "./style.css"
 import SceneGraph from "./SceneGraph";
-import WorldScene from "./scenes/WorldScene";
-import StartScene from "./scenes/StartScene";
+import WorldScene from "./scenes/WorldScene"
+import StartScene from "./scenes/StartScene"
+import { _RIVER, BLOCKED, HOUSE, IGLOO, RIVER, SAND, SENSOR, thingNames, tileNames } from "./WorldMap"
+import logger from "./util/logger";
+import { getCurrentLayerMask } from "./drawTiles"
+import CanvasWrapper from "./CanvasWrapper"
+import MapWidget from "./MapWidget"
 
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap"
 
 function determineScale(width)
 {
@@ -37,18 +45,20 @@ window.onload = () => {
 // });
 
 let tileLayer;
+let paused = false;
+let showMap = false;
 
-const START_X = 1025 * 16;
-const START_Y = 1197 * 16;
+export const START_X = 1280 * 16;
+export const START_Y = 964 * 16;
 
-let posX = START_X;
-let posY = START_Y;
 let dx = 0;
 let dy = 0;
+let blocked = false;
 
-const ACCELERATION = 0.5;
-const SPEED_LIMIT = 12;
-
+const ACCELERATION = 0.6;
+const SPEED_LIMIT = 15;
+const ZOOM_SPEED = 10;
+const INV_ZOOM_SPEED = 1/ZOOM_SPEED;
 /**
  * Global context object for the scene graph.
  *
@@ -86,6 +96,8 @@ const ctx = {
      */
     posX: START_X,
     posY: START_Y,
+    // posX: -3 * 16 - 8, ,
+    // posY: -3 * 16, ,
 
     /**
      * Current user input
@@ -101,41 +113,203 @@ const ctx = {
 
 function handleMovement(delta)
 {
-    const {moveLeftRight, moveUpDown} = ctx.controls;
 
-    if (moveLeftRight)
+    const { map, posX, posY } = ctx;
+
+
+    if (map)
     {
-        dx += moveLeftRight * ACCELERATION;
-        if (Math.abs(dx) > SPEED_LIMIT)
+        const {moveLeftRight, moveUpDown} = ctx.controls;
+
+        const tx = ((posX + 33) >> 4) & map.sizeMask;
+        const ty = ((posY + 28) >> 4) & map.sizeMask;
+
+        const tile = map.read(tx,ty);
+
+        const speedLimit = SPEED_LIMIT * (tile === RIVER ? 0.15 : tile === SAND ? 0.4: 1);
+        if (moveLeftRight)
         {
-            dx = Math.sign(dx) * SPEED_LIMIT;
+            dx += moveLeftRight *  ACCELERATION;
+        }
+        else
+        {
+
+            dx = Math.abs(dx) > 0.1 ? dx * 0.7 : 0;
+        }
+
+        if (moveUpDown)
+        {
+            dy += moveUpDown * ACCELERATION ;
+        }
+        else
+        {
+            dy = Math.abs(dy) > 0.1 ? dy * 0.7 : 0;
+        }
+
+        const speed = Math.sqrt(dx * dx + dy * dy);
+        if (speed > speedLimit)
+        {
+            const f = speedLimit / speed;
+            dx *= f;
+            dy *= f;
+        }
+
+        if (Math.abs(dx) > speedLimit)
+        {
+            dx = Math.sign(dx) * speedLimit;
+        }
+        if (Math.abs(dy) > speedLimit)
+        {
+            dy = Math.sign(dy) * speedLimit;
+        }
+
+
+        let canMove;
+        let thing;
+        let attempts = 0;
+        let x,y;
+        do
+        {
+            x = (posX + dx * delta) & map.fineMask;
+            y = (posY + dy * delta) & map.fineMask;
+
+            const tx = ((x + 33) >> 4) & map.sizeMask;
+            const ty = ((y + 28) >> 4) & map.sizeMask;
+
+            thing = map.getThing(tx,ty);
+
+            canMove = thing < BLOCKED || thing === HOUSE || thing === IGLOO;
+            attempts++;
+
+            if(!canMove)
+            {
+                dx *= 0.5;
+                dy *= 0.5;
+            }
+
+        }  while (!canMove && attempts < 5);
+
+        if (canMove)
+        {
+            if (thing === SENSOR)
+            {
+                const sensor = map.lookupSensor(tx,ty);
+                enterSensor(ctx, sensor);
+            }
+            else
+            {
+                ctx.posX = x;
+                ctx.posY = y;
+                //movementLogger("FREE ON " + tileNames[tile] + "/" + thingNames[thing] + ": " + tx + ", " + ty);
+            }
+        }
+        else
+        {
+            //movementLogger("BLOCKED BY " + tileNames[tile] + "/" + thingNames[thing] + ": " + tx + ", " + ty);
+            
+            dx = 0;
+            dy = 0;
+            blocked = true;
+            //console.log(tx + " x " + ty + ": " + );
         }
     }
-    else
-    {
-        dx = Math.abs(dx) > 0.1 ? dx * 0.8 : 0;
-    }
-    if (moveUpDown)
-    {
-        dy += moveUpDown * ACCELERATION;
-        if (Math.abs(dy) > SPEED_LIMIT)
+}
+
+const movementLogger = logger("movementLogger");
+
+
+function updateSize(scale)
+{
+    const { app } = ctx;
+
+    scale = typeof scale === "number" ? scale : determineScale(window.innerWidth);
+
+    ctx.width = (window.innerWidth / scale) | 0;
+    ctx.height = (window.innerHeight / scale) | 0;
+
+    app.renderer.resize(ctx.width, ctx.height)
+}
+
+
+function togglePause()
+{
+    paused = showMap ? true : !paused;
+    renderReact()
+}
+
+function toggleShowMap()
+{
+    showMap = !showMap;
+    togglePause();
+}
+
+
+function renderReact()
+{
+    return new Promise((resolve, reject) => {
+        try
         {
-            dy = Math.sign(dy) * SPEED_LIMIT;
+            ReactDOM.render(
+                <React.Fragment>
+                    <CanvasWrapper
+                        canvasElem={ctx.app.view}
+                    />
+                    <Modal
+                        isOpen={ paused && !showMap }
+                        toggle={togglePause}
+                        centered={ true }
+                        keyboard={ false }
+                    >
+                        <ModalHeader toggle={ togglePause }>
+                            PAUSED
+                        </ModalHeader>
+                        <ModalBody>
+                            Game paused
+                        </ModalBody>
+                    </Modal>
+                    <Modal
+                        isOpen={ showMap }
+                        toggle={toggleShowMap}
+                        centered={ true }
+                        size="lg"
+                    >
+                        <ModalHeader toggle={ toggleShowMap }>
+                            <button
+                                type="button"
+                                className="btn btn-secondary mr-1"
+                                onClick={ ev => alert("Teleport")}
+
+                            >
+                                Travel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-secondary mr-1"
+                                onClick={ ev => alert("Teleport")}
+
+                            >
+                                Teleport
+                            </button>
+                        </ModalHeader>
+                        <ModalBody>
+                            <MapWidget
+                                map={ ctx.map }
+                                size={
+                                    (Math.min(window.innerWidth, window.innerHeight) - 200) | 0
+                                }
+                            />
+                        </ModalBody>
+                    </Modal>
+                </React.Fragment>,
+                document.getElementById("root"),
+                resolve
+            )
+        } catch (e)
+        {
+            reject(e);
         }
-    }
-    else
-    {
-        dy = Math.abs(dy) > 0.1 ? dy * 0.8 : 0;
-    }
 
-    if (ctx.map)
-    {
-        posX = (posX + dx * delta) & ctx.map.fineMask;
-        posY = (posY + dy * delta) & ctx.map.fineMask;
-
-        ctx.posX = posX;
-        ctx.posY = posY;
-    }
+    })
 }
 
 
@@ -161,8 +335,8 @@ function setup(loader, resources)
         height: height,
         backgroundColor: 0x111111,
         resolution: (window.devicePixelRatio || 1) * scale,
+        antialias: false,
     });
-    document.body.appendChild(app.view);
 
 
     //PIXI.tilemap.Constant.use32bitIndex = true;
@@ -185,9 +359,7 @@ function setup(loader, resources)
         height,
         app,
         container,
-        scale,
-        posX,
-        posY
+        scale
     });
 
     const sceneGraph = new SceneGraph([
@@ -197,26 +369,42 @@ function setup(loader, resources)
 
     app.ticker.add((delta) => {
 
-        handleMovement(delta);
-        sceneGraph.ticker(delta);
+        if (!paused && !showMap)
+        {
+            handleMovement(delta);
+            sceneGraph.ticker(delta);
+        }
     });
 
     window.addEventListener("keydown", ev => {
         const keyCode = ev.keyCode;
 
-
         switch(keyCode)
         {
+
+            case 49:
+                ctx.scale = determineScale(window.innerWidth)
+                break;
+            // map
+            case 77:
+                if (!paused || showMap)
+                {
+                    toggleShowMap();
+                }
+                break;
+            // P
+            case 27:
             case 80:
-                console.log("POS", (posX >> 4)|0, (posY >> 4)|0, ", fine = ", posX, posY, ", layerMask = ", getCurrentLayerMask())
+                console.log("POS", (ctx.posX >> 4)|0, (ctx.posY >> 4)|0, ", fine = ", ctx.posX, ctx.posY, ", layerMask = ", getCurrentLayerMask())
+                togglePause();
                 break;
             case 36:
-                posX = START_X;
-                posY = START_Y;
+                ctx.posX = START_X;
+                ctx.posY = START_Y;
                 break;
             case 35:
-                posX = 0;
-                posY = 0;
+                ctx.posX = 0;
+                ctx.posY = 0;
                 break;
             case 38:
             case 87:
@@ -243,6 +431,8 @@ function setup(loader, resources)
 
         //console.log("keyCode = ", keyCode);
 
+
+
         switch(keyCode)
         {
             case 38:
@@ -250,26 +440,37 @@ function setup(loader, resources)
             case 40:
             case 83:
                 ctx.controls.moveUpDown = 0;
+                blocked = false;
                 break;
             case 37:
             case 65:
             case 39:
             case 68:
                 ctx.controls.moveLeftRight = 0;
+                blocked = false;
                 break;
         }
     }, true);
 
     window.addEventListener("resize", ev => {
 
-        ctx.width = (window.innerWidth / ctx.scale)|0;
-        ctx.height = (window.innerHeight / ctx.scale)|0;
-
-        app.renderer.resize(ctx.width,ctx.height)
+        updateSize();
 
         //console.log("Window resized to " + ctx.width + " x " + ctx.height)
 
     }, true);
 
+
+    let zoomDelta = 0;
+
+    window.addEventListener("wheel", event => {
+
+        const deltaY = Math.sign(event.deltaY);
+        zoomDelta += deltaY * INV_ZOOM_SPEED;
+    });
+
     sceneGraph.start();
+    sceneGraph.render();
+
+    renderReact()
 }

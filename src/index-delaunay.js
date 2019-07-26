@@ -1,14 +1,10 @@
 import Prando from "prando"
-import Delaunator from "delaunator"
-import Delaunay from "./Delaunay"
+import Delaunay from "./util/Delaunay"
 import now from "performance-now"
 
 console.log("delaunay")
 
 window.onload = () => {
-
-    const loading = document.querySelector("div.loading");
-    loading.parentNode.removeChild(loading);
 
     const size = 800;
 

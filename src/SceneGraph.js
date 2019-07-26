@@ -26,6 +26,7 @@ function checkClass({classes}, cls)
 
 }
 
+const effectResolve = Symbol("effectResolve");
 
 class SceneGraph {
     constructor(classes, ctx, input)
@@ -38,8 +39,97 @@ class SceneGraph {
         this.current = new classes[0](this.ctx, input);
 
         console.log("SCENE-GRAPH", this);
+
+        this.effectQueue = [];
+
+        this.time = 0;
     }
 
+
+    /**
+     * Adds the given effect function to the running effects
+     *
+     * @param effect        effect function
+     * @param [start]       start time. if not given, the current scene graph time is used
+     * @param [duration]    how long to play the effect (default: 1 second)
+     */
+    addEffect(effect, start = null, duration = 1000)
+    {
+        if (start === null)
+        {
+            start = this.time;
+        }
+
+        const { effectQueue } = this;
+        const end = start + duration;
+
+        return new Promise(resolve => {
+
+            const ctx = {
+                start,
+                duration,
+                [effectResolve] : resolve
+            };
+
+            for (let i = 0; i < effectQueue.length; i += 2)
+            {
+                const currEnd = effectQueue[i] + effectQueue[i + 1];
+                if (end < currEnd)
+                {
+                    effectQueue.splice(i, 0, ctx, effect);
+                    return;
+                }
+            }
+            effectQueue.push(ctx, effect);
+        })
+    }
+
+
+    runEffects(delta)
+    {
+        const { effectQueue } = this;
+
+        this.time += delta;
+
+        const { time } = this;
+
+        let doneLimit = -1;
+
+        for (let i = 0; i < effectQueue.length; i += 2)
+        {
+            const ctx = effectQueue[i];
+            const { start, duration } = ctx;
+            const effect = effectQueue[i + 1];
+
+            // is the end point still in the future?
+            if ( start <= time && start + duration > time)
+            {
+                let limitBefore = doneLimit;
+                // if this is the first not-done entry, mark it
+                if (doneLimit < 0)
+                {
+                    doneLimit = i;
+                }
+                if (effect.run(ctx, (time - start) / duration) === false)
+                {
+                    // cancel effect
+                    ctx.duration = 0;
+                    // revert limit marking if it happened
+                    doneLimit = limitBefore;
+                }
+            }
+        }
+
+        if (doneLimit > 0)
+        {
+            const removed = effectQueue.splice( 0, doneLimit);
+            for (let i = 0; i < removed.length; i += 2)
+            {
+                const ctx = effectQueue[i];
+                ctx[effectResolve]();
+            }
+        }
+    }
 
     start()
     {
@@ -67,16 +157,28 @@ class SceneGraph {
 
     ticker(delta)
     {
+        this.runEffects(delta);
+
+
         if (typeof this.current.ticker === "function")
         {
             this.current.ticker(delta);
         }
 
+        this.render();
+    }
+
+    render()
+    {
         if (typeof this.current.render === "function")
         {
             this.current.render();
         }
     }
+
+
+
+
 
     push(SceneClass, input)
     {

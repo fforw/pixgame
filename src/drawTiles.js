@@ -16,12 +16,15 @@ export const TEXTURES = [
 ];
 export const THING_TEXTURES = [
     null,
-    null,
+    null, //"marker3.png",
     "plant.png",
     "plant2.png",
     "plant3.png",
     "dot.png",
     null,
+    null,
+    null, //"marker.png",
+    null, //"marker2.png",
     null,
     null,
     null,
@@ -34,6 +37,7 @@ export const THING_TEXTURES = [
     "boulder2.png",
     "boulder3.png",
     "house.png",
+    "igloo.png",
 ];
 
 export function getCurrentLayerMask()
@@ -48,16 +52,15 @@ export default function drawTiles(ctx, map, posX, posY, drawPlayer = true)
     const halfWidth = width / 2;
     const halfHeight = height / 2;
 
-    const widthInTiles = Math.ceil(width / 16) + 5;
-    const heightInTiles = Math.ceil(height / 16) + 9;
+    const widthInTiles = Math.ceil(width / 16) + 7;
+    const heightInTiles = Math.ceil(height / 16) + 11;
 
     tileLayer.clear();
 
     const { sizeMask, fineMask, size } = map;
 
-    let xOffset = (posX - halfWidth) & fineMask;
-    let yOffset = (posY - halfHeight)& fineMask;
-
+    let xOffset = (posX - halfWidth ) & fineMask;
+    let yOffset = (posY - halfHeight - 4) & fineMask;
     let screenX = -32 + -(xOffset & 15);
     let screenY = -32 + -(yOffset & 15);
 
@@ -147,7 +150,7 @@ export default function drawTiles(ctx, map, posX, posY, drawPlayer = true)
 
     for (let y = 0; y < heightInTiles; y++)
     {
-        if (drawPlayer && ((mapY + y) & sizeMask) === ((yPosInTiles + 1) & sizeMask) && (posY & 15) < 8)
+        if (drawPlayer && ((mapY + y) & sizeMask) === ((yPosInTiles + 2) & sizeMask) && (posY & 15) < 15)
         {
             tileLayer.addFrame(
                 "bunny.png",
@@ -166,13 +169,13 @@ export default function drawTiles(ctx, map, posX, posY, drawPlayer = true)
                 const {pivot, frame} = atlas.frames[texture];
                 tileLayer.addFrame(
                     texture,
-                    screenX + (x << 4) - (pivot.x * frame.w) | 0,
-                    screenY + (y << 4) - (pivot.y * frame.h) | 0
+                    (screenX + (x << 4) - (pivot.x * frame.w) - 9) | 0,
+                    (screenY + (y << 4) - (pivot.y * frame.h) - 10) | 0
                 );
             }
         }
 
-        if (drawPlayer &&((mapY + y) & sizeMask) === ((yPosInTiles + 1) & sizeMask) && (posY & 15) >= 8)
+        if (drawPlayer &&((mapY + y) & sizeMask) === ((yPosInTiles + 2) & sizeMask) && (posY & 15) >= 15)
         {
             tileLayer.addFrame(
                 "bunny.png",

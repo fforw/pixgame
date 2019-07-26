@@ -22,7 +22,7 @@ module.exports = {
     entry: {
         "main": "./src/index.js",
         "height": "./src/index-height.js",
-        "delaunay": "./src/index-delaunay.js"
+        "xor": "./src/index-xor.js"
     },
 
     devtool: "source-map",
@@ -54,9 +54,9 @@ module.exports = {
 
         new HtmlWebpackPlugin({
             inject: "body",
-            chunks: ["vendors", "delaunay"],
+            chunks: ["vendors", "xor"],
             template: "src/template.html",
-            filename: "delaunay.html"
+            filename: "xor.html"
         }),
 
         new MiniCssExtractPlugin({

@@ -108,7 +108,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
         images =>  {
             const promises = [];
             images.forEach(img => {
-                if (img.id.indexOf("ms-") === 0)
+                if (img.worldId.indexOf("ms-") === 0)
                 {
                     const { width, height } = img;
                     if (width !== 16 || height !== 16)
@@ -122,7 +122,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
                             Jimp.create(16, 16, 0x00000000).then(
                                 composited => {
 
-                                    const variantValue = typeof variant === "number" ? variant : variant[img.id];
+                                    const variantValue = typeof variant === "number" ? variant : variant[img.worldId];
 
                                     let caseIndex = i;
 
@@ -144,7 +144,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
                                     return {
                                         ... img,
                                         img: composited,
-                                        id: img.id + "-" + ( i + 1)
+                                        id: img.worldId + "-" + (i + 1)
                                     }
                                     
                                 }
@@ -186,7 +186,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
 
                     const {x, y, width: w, height: h, img} = bin;
 
-                    atlas.frames[bin.id] = {
+                    atlas.frames[bin.worldId] = {
 
                         // default values ...
                         rotated: false,
@@ -206,7 +206,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
                             y: 0.5
                         },
                         // ... potentially overridden by values from the atlas template
-                        ...pixelPivot(predefinedAtlas.frames[bin.id], w, h),
+                        ...pixelPivot(predefinedAtlas.frames[bin.worldId], w, h),
 
                         // ... but not "frame"
                         frame: {

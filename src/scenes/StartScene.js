@@ -1,6 +1,6 @@
 import { Scene } from "../SceneGraph";
 import WorldMap from "../WorldMap";
-import generateAsync from "../generateAsync";
+import Services from "../workers/Services";
 import WorldScene from "./WorldScene";
 import { drawDigit } from "../util/drawDigit";
 import drawTiles from "../drawTiles";
@@ -17,7 +17,7 @@ class StartScene extends Scene
     {
         this.map = new WorldMap(128, "start");
 
-        generateAsync("floppy-disk", percent => {
+        Services.generateMap("floppy-disk", 2048, percent => {
 
             const text = String(Math.round(percent * 100));
 

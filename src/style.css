@@ -17,3 +17,8 @@ body{
     font-family: monospace;
     font-size: 24px;
 }
+
+canvas
+{
+    cursor: pointer !important;
+}
