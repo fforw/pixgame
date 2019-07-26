@@ -125,7 +125,7 @@ export const thingNames = [
     "IGLOO"
 ];
 
-const thingWalkability = [
+export const thingWalkability = [
 
     1, // EMPTY
     1, // PLANT
@@ -1652,7 +1652,7 @@ export default class WorldMap {
         this.sizeMask = size - 1;
         this.fineMask = (size << 4) - 1;
 
-        this.factor = 1 / size;
+        this.invSizeFactor = 1 / size;
         this.tiles = tiles || new Uint8Array(size * size);
         this.things = things || new Uint8Array(size * size);
         this.sensors = sensors || {};
@@ -1750,8 +1750,8 @@ export default class WorldMap {
      */
     heightFn(x, y, coords, nCoords = null)
     {
-        const s = x * this.factor;
-        const t = y * this.factor;
+        const s = x * this.invSizeFactor;
+        const t = y * this.invSizeFactor;
 
         let nx;
         let ny;
@@ -1795,8 +1795,8 @@ export default class WorldMap {
     heightCoords(x, y)
     {
 
-        const s = x * this.factor;
-        const t = y * this.factor;
+        const s = x * this.invSizeFactor;
+        const t = y * this.invSizeFactor;
 
         const nx = Math.cos(s * TAU);
         const ny = Math.cos(t * TAU);

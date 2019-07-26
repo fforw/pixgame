@@ -8,7 +8,7 @@ import {
     RESPONSE_MAP,
     RESPONSE_PATH,
     RESPONSE_PROGRESS,
-    RESPONSE_SUB_PATH
+    RESPONSE_SEGMENT
 } from "./services-constants";
 
 
@@ -58,7 +58,7 @@ function processWorkerMessage(data)
             }
             break;
         }
-        case RESPONSE_SUB_PATH:
+        case RESPONSE_SEGMENT:
         {
             entry.onSegment(message.path);
             break;

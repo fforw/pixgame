@@ -1,5 +1,5 @@
 import Heap from "heap"
-import { isPointInTriangle } from "./WorldMap";
+import { BLOCKED, isPointInTriangle, thingWalkability } from "./WorldMap";
 
 
 const tmpBBox = {
@@ -147,14 +147,18 @@ function removeLastPointFromTriangleNodes(navMesh, triangle, tmpNode)
 /**
  * Does macro/word-level a-* path planning based on the prepared navigation mesh.
  *
- * @param {WorldMap} map
- * @param {Number} sx
- * @param {Number} sy
- * @param {Number} ex
- * @param {Number} ey
- * @returns {null|Array<Number>}    macro path or null
+ * This method is *very* expensive for longer paths. Use macroPath() to plan paths.
+ *
+ *
+ * @param {WorldMap} map    world map
+ * @param {Number} sx       start x-coordinate
+ * @param {Number} sy       start y-coordinate
+ * @param {Number} ex       end x-coordinate
+ * @param {Number} ey       end y-coordinate
+ *
+ * @returns {null|Array<Number>}    local path or null
  */
-export default function pathPlanning(map, sx, sy, ex, ey) {
+export default function macroPath(map, sx, sy, ex, ey) {
 
     const { nodes, vertices } = map.navMesh;
 
@@ -205,27 +209,26 @@ export default function pathPlanning(map, sx, sy, ex, ey) {
             {
                 let node = currentNode;
 
-                let prevX = ex;
-                let prevY = ey;
-                const path = [ex, ey];
+                let prevX = -1;
+                let prevY = 0;
+                const path = [];
 
                 let maxSegmentLength = 0;
-                node = node.predecessor;
                 while(node)
                 {
                     const nodeOff = node.node;
                     const x = nodes[nodeOff].x;
                     const y = nodes[nodeOff].y;
 
-                    node = node.predecessor;
+                    const nextNode = node.predecessor;
 
                     const dx = x - prevX;
                     const dy = y - prevY;
 
                     const len = dx * dx + dy * dy;
-                    if (len >= MIN_MESH_PATH_SEGMENT_LENGTH || !node)
+                    if (prevX < 0 || len >= MIN_MESH_PATH_SEGMENT_LENGTH || !nextNode)
                     {
-                        path.push(
+                        path.unshift(
                             x,
                             y
                         );
@@ -236,6 +239,7 @@ export default function pathPlanning(map, sx, sy, ex, ey) {
                         maxSegmentLength = len;
                     }
 
+                    node = nextNode;
                     prevX = x;
                     prevY = y;
                 }
@@ -279,7 +283,6 @@ export default function pathPlanning(map, sx, sy, ex, ey) {
                     neighbor.predecessor = currentNode;
                     neighbor.g = tentative_g;
                     neighbor.f = tentative_g + distanceEstimate(map, neighborId, ex, ey);
-                    neighbor.length = currentNode.length + 1;
 
                     openList.updateItem(neighbor)
                 }
@@ -318,4 +321,218 @@ function distanceEstimate(map, id, ex, ey)
     const dy = ey - node.y;
     return Math.abs(dx) + Math.abs(dy);
 }
+
+
+function gridDistanceEstimate(map, offset, ex, ey)
+{
+    const { sizeMask, invSizeFactor } = map;
+
+    const x = offset & sizeMask;
+    const y = (offset * invSizeFactor) & sizeMask;
+
+    const dx = ex -x ;
+    const dy = ey -y ;
+
+    return Math.sqrt(dx*dx+dy*dy);
+}
+
+
+/**
+ * Finds the first walkable tile in a spiral pattern around a center tile
+ * @param {WorldMap} map        world map
+ * @param {Number} x            center x-coordinate
+ * @param {Number} y            center y-coordinate
+ * @param {Number} maxSteps     maximum number of steps to walk the spiral (default: 1000)
+ * 
+ * @returns {number} tile offset or -1 for none found
+ */
+export function searchWalkable(map, x, y, maxSteps = 1000)
+{
+    const { size, sizeMask, things } = map;
+
+    const offset = (y & sizeMask) * size + (x & sizeMask);
+    let thing= things[offset];
+    if (thing < BLOCKED)
+    {
+        return offset;
+    }
+
+    let dx = 1;
+    let dy = 0;
+    let steps = 1;
+
+    do
+    {
+        for (let i=0; i < 2; i++)
+        {
+            for (let j =0; j < steps; j++)
+            {
+                x += dx;
+                y += dy;
+
+                const offset = (y & sizeMask) * size + (x & sizeMask);
+                thing = things[offset];
+                if (thing < BLOCKED)
+                {
+                    return offset;
+                }
+            }
+
+            // rotate 90 degrees clockwise
+            let tmp = dx;
+            dx = -dy;
+            dy = tmp;
+
+            if (--maxSteps === 0)
+            {
+                return -1;
+            }
+        }
+        steps++;
+
+    } while (thing >= BLOCKED);
+
+}
+
+
+export function localPathStep(ctx)
+{
+    const { map, openList, closedList, endOffset, ex, ey } = ctx;
+
+    const { size, sizeMask, invSizeFactor, things } = map;
+
+    const currentNode = openList.pop();
+    if (currentNode.node === endOffset)
+    {
+        let node = currentNode;
+
+        const path = [];
+
+        while (node)
+        {
+            const nodeOff = node.node;
+            const x = nodeOff & sizeMask;
+            const y = (nodeOff * invSizeFactor) & sizeMask;
+
+            path.unshift(
+                x,
+                y
+            );
+            node = node.predecessor;
+        }
+
+        return path;
+    }
+
+    closedList.add(currentNode.node);
+
+    let dx = 1;
+    let dy = 0;
+
+    for (let i = 0; i < 4; i++)
+    {
+        const neighborOffset =
+            ((currentNode.node + dx) & sizeMask) +
+            ((currentNode.node * invSizeFactor + dy) & sizeMask) * size;
+
+        if (things[neighborOffset] < BLOCKED)
+        {
+            if (!closedList.has(neighborOffset))
+            {
+                let neighbor = getHeapNode(openList, neighborOffset);
+                const tentative_g = currentNode.g + thingWalkability[things[currentNode.node]] * 0.5;
+
+                if (!neighbor || tentative_g < neighbor.g)
+                {
+                    if (!neighbor)
+                    {
+                        neighbor = {
+                            predecessor: currentNode,
+                            g: tentative_g,
+                            f: tentative_g + gridDistanceEstimate(map, neighborOffset, ex, ey),
+                            node: neighborOffset
+                        };
+
+                        openList.insert(neighbor);
+                    }
+                    else if (tentative_g < neighbor.g)
+                    {
+                        neighbor.predecessor = currentNode;
+                        neighbor.g = tentative_g;
+                        neighbor.f = tentative_g + gridDistanceEstimate(map, neighborOffset, ex, ey);
+
+                        openList.updateItem(neighbor)
+                    }
+                }
+            }
+        }
+        // rotate 90 degrees
+        let tmp;
+        tmp = dx;
+        dx = -dy;
+        dy = tmp;
+    }
+
+    return null;
+}
+
+
+/**
+ * Does local-level a-* path planning based on the map grid.
+ *
+ * @param {WorldMap} map    world map
+ * @param {Number} sx       start x-coordinate
+ * @param {Number} sy       start y-coordinate
+ * @param {Number} ex       end x-coordinate
+ * @param {Number} ey       end y-coordinate
+ *
+ * @returns {{openList: *, endOffset: *, ex: *, ey: *, closedList: *, map: *}}    macro path or null
+ */
+
+//  * @returns {null|Array<Number>}    macro path or null
+export function localPath(map, sx, sy, ex, ey)
+{
+
+    const {size, sizeMask, invSizeFactor, things} = map;
+
+    const openList = new Heap(compareNodes);
+    const closedList = new Set();
+
+    const startOffset = (sy & sizeMask) * size + (sx & sizeMask);
+    const endOffset = (ey & sizeMask) * size + (ex & sizeMask);
+
+    const startTile = things[startOffset];
+    const endTile = things[endOffset];
+
+    console.log({startTile, endTile, limit: BLOCKED})
+
+    if (startTile >= BLOCKED || endTile >= BLOCKED)
+    {
+        return null;
+    }
+
+    // console.log("START at #" + startNode + "=", nodes[startNode].x, nodes[startNode].y)
+    // console.log("END at #" + endNode, "=", nodes[endNode].x, nodes[endNode].y)
+
+    openList.push({
+        g: 1,
+        f: gridDistanceEstimate(map, startOffset, ex, ey),
+        node: startOffset
+    });
+
+    // while (!openList.empty())
+    // {
+    //     const path = localPathStep(ctx);
+    //     if (path != null)
+    //     {
+    //         return path;
+    //     }
+    //
+    // }
+    // return null;
+
+    return {map, openList, closedList, endOffset, ex, ey};
+}
+
+
 
