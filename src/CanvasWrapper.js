@@ -28,10 +28,10 @@ class CanvasWrapper extends React.Component {
     {
 
         return (
-            <div ref={ elem => {
-                console.log("SET REF", elem);
-                this._elem = elem;
-            } } className="canvas-wrapper">
+            <div
+                ref={ elem => this._elem = elem }
+                className="canvas-wrapper"
+            >
             </div>
         )
     }

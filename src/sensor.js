@@ -18,7 +18,7 @@ export default function Sensor(mode, action, ctx = {}, options)
 
     if (__DEV)
     {
-        if (!mode || SensorMode.hasOwnProperty(mode))
+        if (!mode || !SensorMode.hasOwnProperty(mode))
         {
             throw new Error("Invalid mode: " + mode)
         }
@@ -32,4 +32,5 @@ export default function Sensor(mode, action, ctx = {}, options)
     this.mode = mode;
     this.action = action;
     this.ctx = ctx;
+    this.options = options;
 }

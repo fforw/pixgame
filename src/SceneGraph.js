@@ -141,6 +141,7 @@ class SceneGraph {
     {
         if (typeof this.current.onEnter === "function")
         {
+            //console.log("Invoking onEnter on ", this.current)
             this.current.onEnter();
         }
     }
@@ -183,7 +184,8 @@ class SceneGraph {
     push(SceneClass, input)
     {
         checkClass(this, SceneClass);
-        this.current = new SceneClass(this.ctx, input, this.current)
+        this.current = new SceneClass(this.ctx, input, this.current);
+        this.onEnter();
     }
 
     pop()
@@ -203,7 +205,8 @@ class SceneGraph {
     goto(SceneClass, input)
     {
         checkClass(this, SceneClass);
-        this.current = new SceneClass(this.ctx, input, null)
+        this.current = new SceneClass(this.ctx, input, null);
+        this.onEnter();
     }
 
 }

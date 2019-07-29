@@ -501,7 +501,7 @@ var pixi_tilemap;
             if (!vb) {
                 vb = plugin.createVb();
                 this.vb = vb;
-                this.vbId = vb.worldId;
+                this.vbId = vb.id;
                 this.vbBuffer = null;
                 this.modificationMarker = 0;
             }

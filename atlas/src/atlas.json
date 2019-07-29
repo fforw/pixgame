@@ -12,6 +12,12 @@
                 "y": 118
             }
         },
+        "large-shadow.png": {
+            "pivot": {
+                "x": 0.5,
+                "y": 0.4
+            }
+        },
         "small-tree.png": {
             "pivot": {
                 "x": 15,
@@ -65,6 +71,52 @@
                 "x": 58,
                 "y": 91
             }
+        },
+
+        
+        "wall-end.png": {
+            "pivot": {
+                "x": 8,
+                "y": 0
+            }
+        },
+        "wall.png": {
+            "pivot": {
+                "x": 8,
+                "y": 55
+            }
+        },
+        "wall-shadow-end.png": {
+            "pivot": {
+                "x": 0,
+                "y": 0
+            }
+        },
+        "wall-shadow.png": {
+            "pivot": {
+                "x": -8,
+                "y": 0
+            }
+        },
+        "wall-top.png": {
+            "pivot": {
+                "x": 8,
+                "y": 55
+            }
+        },
+        "wall-front.png": {
+            "pivot": {
+                "x": 8,
+                "y": 55
+            }
+        },
+        "fridge.png": {
+            "pivot": {
+                "x": 10,
+                "y": 55
+            }
         }
+
+
     }
 }

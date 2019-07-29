@@ -18,7 +18,7 @@ body{
     font-size: 24px;
 }
 
-canvas
+body.interaction canvas
 {
     cursor: pointer !important;
 }

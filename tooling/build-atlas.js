@@ -57,12 +57,12 @@ function pixelPivot(frame, w, h)
 
     const { x, y } = frame.pivot;
 
-    if (x > 1)
+    if (Math.abs(x) > 1)
     {
 
         frame.pivot.x  /= w
     }
-    if (y > 1)
+    if (Math.abs(y) > 1)
     {
 
         frame.pivot.y  /= h
@@ -80,8 +80,11 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
 
     const predefinedAtlas = readAtlasJSON(path.join(curr, "atlas.json"));
 
-    console.log("Template = ", predefinedAtlas)
-
+    // Object.keys(predefinedAtlas.frames)
+    //     .forEach(
+    //         n => console.log(n, ": ", JSON.stringify(predefinedAtlas.frames[n]))
+    //     );
+    
     const promises = [];
 
     fs.readdirSync(curr).forEach(file => {
@@ -108,7 +111,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
         images =>  {
             const promises = [];
             images.forEach(img => {
-                if (img.worldId.indexOf("ms-") === 0)
+                if (img.id.indexOf("ms-") === 0)
                 {
                     const { width, height } = img;
                     if (width !== 16 || height !== 16)
@@ -122,7 +125,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
                             Jimp.create(16, 16, 0x00000000).then(
                                 composited => {
 
-                                    const variantValue = typeof variant === "number" ? variant : variant[img.worldId];
+                                    const variantValue = typeof variant === "number" ? variant : variant[img.id];
 
                                     let caseIndex = i;
 
@@ -144,7 +147,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
                                     return {
                                         ... img,
                                         img: composited,
-                                        id: img.worldId + "-" + (i + 1)
+                                        id: img.id + "-" + (i + 1)
                                     }
                                     
                                 }
@@ -176,7 +179,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
             // const width = images.map(img => +img.x + img.width).reduce(reduceMax, 0);
             // const height = images.map(img => +img.y + img.height).reduce(reduceMax, 0);
 
-            console.log("Actual atlas dimensions: ", width, height);
+            console.log("\nActual atlas dimensions: ", width, height);
 
             Jimp.create(width, height, 0x00000000).then(atlasImg => {
 
@@ -186,7 +189,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
 
                     const {x, y, width: w, height: h, img} = bin;
 
-                    atlas.frames[bin.worldId] = {
+                    atlas.frames[bin.id] = {
 
                         // default values ...
                         rotated: false,
@@ -206,7 +209,7 @@ function generateAtlas(atlasPath, index, marchingSquareCases, variant)
                             y: 0.5
                         },
                         // ... potentially overridden by values from the atlas template
-                        ...pixelPivot(predefinedAtlas.frames[bin.worldId], w, h),
+                        ...pixelPivot(predefinedAtlas.frames[bin.id], w, h),
 
                         // ... but not "frame"
                         frame: {
@@ -286,7 +289,7 @@ function readMarchingSquares()
 
 
 readMarchingSquares().then( marchingSquareCases => {
-    console.log("MS", marchingSquareCases);
+    //console.log("MS", marchingSquareCases);
 
     for (let i = 0; i < ATLASES.length; i++)
     {

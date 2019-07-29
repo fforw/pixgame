@@ -136,17 +136,20 @@ describe("simplify", function(){
 
 	});
 
-	it("finally", () => {
+	it("directions", () => {
 
-	    try
-        {
+        const direction = (sdx, sdy) => (
+            (sdx > 0) +
+            ((sdy > 0) << 1) +
+            ((sdx < 0) << 2) +
+            ((sdy < 0) << 3)
+        );
 
-            console.log("return");
-            return;
-        }
-        finally
-        {
-            console.log("finally");
-        }
+        console.log(direction(0,0));
+        console.log(direction(1,0));
+        console.log(direction(0,1));
+        console.log(direction(-1,0));
+        console.log(direction(0,-1));
+        console.log(direction(-1,-1));
     })
 });

@@ -1,5 +1,6 @@
 import Heap from "heap"
-import { BLOCKED, isPointInTriangle, thingWalkability } from "./WorldMap";
+import { isPointInTriangle} from "./WorldMap";
+import { BLOCKED, thingWalkability } from "./tilemap-config";
 
 
 const tmpBBox = {
@@ -325,10 +326,10 @@ function distanceEstimate(map, id, ex, ey)
 
 function gridDistanceEstimate(map, offset, ex, ey)
 {
-    const { sizeMask, invSizeFactor } = map;
+    const { sizeMask, sizeBits } = map;
 
     const x = offset & sizeMask;
-    const y = (offset * invSizeFactor) & sizeMask;
+    const y = (offset >>> sizeBits) & sizeMask;
 
     const dx = ex -x ;
     const dy = ey -y ;
@@ -348,9 +349,9 @@ function gridDistanceEstimate(map, offset, ex, ey)
  */
 export function searchWalkable(map, x, y, maxSteps = 1000)
 {
-    const { size, sizeMask, things } = map;
+    const { sizeMask, things, sizeBits } = map;
 
-    const offset = (y & sizeMask) * size + (x & sizeMask);
+    const offset = ((y & sizeMask) << sizeBits) + (x & sizeMask);
     let thing= things[offset];
     if (thing < BLOCKED)
     {
@@ -370,7 +371,7 @@ export function searchWalkable(map, x, y, maxSteps = 1000)
                 x += dx;
                 y += dy;
 
-                const offset = (y & sizeMask) * size + (x & sizeMask);
+                const offset = ((y & sizeMask) << sizeBits) + (x & sizeMask);
                 thing = things[offset];
                 if (thing < BLOCKED)
                 {
@@ -395,86 +396,6 @@ export function searchWalkable(map, x, y, maxSteps = 1000)
 }
 
 
-export function localPathStep(ctx)
-{
-    const { map, openList, closedList, endOffset, ex, ey } = ctx;
-
-    const { size, sizeMask, invSizeFactor, things } = map;
-
-    const currentNode = openList.pop();
-    if (currentNode.node === endOffset)
-    {
-        let node = currentNode;
-
-        const path = [];
-
-        while (node)
-        {
-            const nodeOff = node.node;
-            const x = nodeOff & sizeMask;
-            const y = (nodeOff * invSizeFactor) & sizeMask;
-
-            path.unshift(
-                x,
-                y
-            );
-            node = node.predecessor;
-        }
-
-        return path;
-    }
-
-    closedList.add(currentNode.node);
-
-    let dx = 1;
-    let dy = 0;
-
-    for (let i = 0; i < 4; i++)
-    {
-        const neighborOffset =
-            ((currentNode.node + dx) & sizeMask) +
-            ((currentNode.node * invSizeFactor + dy) & sizeMask) * size;
-
-        if (things[neighborOffset] < BLOCKED)
-        {
-            if (!closedList.has(neighborOffset))
-            {
-                let neighbor = getHeapNode(openList, neighborOffset);
-                const tentative_g = currentNode.g + thingWalkability[things[currentNode.node]] * 0.5;
-
-                if (!neighbor || tentative_g < neighbor.g)
-                {
-                    if (!neighbor)
-                    {
-                        neighbor = {
-                            predecessor: currentNode,
-                            g: tentative_g,
-                            f: tentative_g + gridDistanceEstimate(map, neighborOffset, ex, ey),
-                            node: neighborOffset
-                        };
-
-                        openList.insert(neighbor);
-                    }
-                    else if (tentative_g < neighbor.g)
-                    {
-                        neighbor.predecessor = currentNode;
-                        neighbor.g = tentative_g;
-                        neighbor.f = tentative_g + gridDistanceEstimate(map, neighborOffset, ex, ey);
-
-                        openList.updateItem(neighbor)
-                    }
-                }
-            }
-        }
-        // rotate 90 degrees
-        let tmp;
-        tmp = dx;
-        dx = -dy;
-        dy = tmp;
-    }
-
-    return null;
-}
 
 
 /**
@@ -486,25 +407,21 @@ export function localPathStep(ctx)
  * @param {Number} ex       end x-coordinate
  * @param {Number} ey       end y-coordinate
  *
- * @returns {{openList: *, endOffset: *, ex: *, ey: *, closedList: *, map: *}}    macro path or null
+ * @returns {null|Array<Number>}    macro path or null
  */
 
-//  * @returns {null|Array<Number>}    macro path or null
 export function localPath(map, sx, sy, ex, ey)
 {
-
-    const {size, sizeMask, invSizeFactor, things} = map;
+    const { sizeMask, sizeBits, things} = map;
 
     const openList = new Heap(compareNodes);
     const closedList = new Set();
 
-    const startOffset = (sy & sizeMask) * size + (sx & sizeMask);
-    const endOffset = (ey & sizeMask) * size + (ex & sizeMask);
+    const startOffset = ((sy & sizeMask) << sizeBits) + (sx & sizeMask);
+    const endOffset = ((ey & sizeMask) << sizeBits) + (ex & sizeMask);
 
     const startTile = things[startOffset];
     const endTile = things[endOffset];
-
-    console.log({startTile, endTile, limit: BLOCKED})
 
     if (startTile >= BLOCKED || endTile >= BLOCKED)
     {
@@ -520,19 +437,80 @@ export function localPath(map, sx, sy, ex, ey)
         node: startOffset
     });
 
-    // while (!openList.empty())
-    // {
-    //     const path = localPathStep(ctx);
-    //     if (path != null)
-    //     {
-    //         return path;
-    //     }
-    //
-    // }
-    // return null;
+    while (!openList.empty())
+    {
 
-    return {map, openList, closedList, endOffset, ex, ey};
+        const currentNode = openList.pop();
+        if (currentNode.node === endOffset)
+        {
+            let node = currentNode;
+
+            const path = [];
+
+            while (node)
+            {
+                const nodeOff = node.node;
+                const x = nodeOff & sizeMask;
+                const y = (nodeOff >>> sizeBits) & sizeMask;
+
+                path.unshift(
+                    x,
+                    y
+                );
+                node = node.predecessor;
+            }
+
+            return path;
+        }
+
+        closedList.add(currentNode.node);
+
+        let dx = 1;
+        let dy = 0;
+
+        for (let i = 0; i < 4; i++)
+        {
+            const neighborOffset =
+                ((currentNode.node + dx) & sizeMask) +
+                ((((currentNode.node >>> sizeBits) + dy) & sizeMask) << sizeBits);
+
+            if (things[neighborOffset] < BLOCKED)
+            {
+                if (!closedList.has(neighborOffset))
+                {
+                    let neighbor = getHeapNode(openList, neighborOffset);
+                    const tentative_g = currentNode.g + thingWalkability[things[currentNode.node]] * 0.5;
+
+                    if (!neighbor || tentative_g < neighbor.g)
+                    {
+                        if (!neighbor)
+                        {
+                            neighbor = {
+                                predecessor: currentNode,
+                                g: tentative_g,
+                                f: tentative_g + gridDistanceEstimate(map, neighborOffset, ex, ey),
+                                node: neighborOffset
+                            };
+
+                            openList.insert(neighbor);
+                        }
+                        else if (tentative_g < neighbor.g)
+                        {
+                            neighbor.predecessor = currentNode;
+                            neighbor.g = tentative_g;
+                            neighbor.f = tentative_g + gridDistanceEstimate(map, neighborOffset, ex, ey);
+
+                            openList.updateItem(neighbor)
+                        }
+                    }
+                }
+            }
+            // rotate 90 degrees
+            let tmp;
+            tmp = dx;
+            dx = -dy;
+            dy = tmp;
+        }
+    }
+    return null;
 }
-
-
-

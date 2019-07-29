@@ -1,5 +1,5 @@
 import WorldMap from "../WorldMap";
-import macroPath, { localPath } from "../navigation";
+import macroPath, { localPath, searchWalkable } from "../navigation";
 import uuid from "uuid";
 import {
     QUERY_GENERATE,
@@ -9,6 +9,7 @@ import {
     RESPONSE_ERROR,
     RESPONSE_SEGMENT, RESPONSE_PATH
 } from "./services-constants";
+import simplify from "../util/simplify";
 
 
 function reply(ticket, message)
@@ -40,8 +41,8 @@ let iterator;
 function doSubPathRoundRobin()
 {
 
-    let entry;
-    if (!iterator || !(entry = iterator.next()))
+    let current;
+    if (!iterator || !(current = iterator.next().value))
     {
         if (paths.size === 0)
         {
@@ -49,19 +50,25 @@ function doSubPathRoundRobin()
             return;
         }
         iterator = paths.entries();
-        entry = iterator.next();
+        current = iterator.next().value;
     }
 
-    const { map, ticket, macroPath, pos, reportSegments }  = entry;
 
-    const sx = macroPath[pos];
-    const sy = macroPath[pos + 1];
-    const ex = macroPath[pos + 2];
-    const ey = macroPath[pos + 3];
+    const [ticket, entry]  = current;
+    const { map, worldPath, pos, reportSegments } = entry;
 
-    console.log("Calculate next Path Segment for ticket #" + ticket, sx, sy, ex, ey);
+    const { sizeMask, sizeBits} = map;
 
-    const path = localPath(
+    let offset = searchWalkable(map,  worldPath[pos],  worldPath[pos + 1]);
+    const sx = offset & sizeMask;
+    const sy = (offset >>> sizeBits) & sizeMask ;
+    offset = searchWalkable(map,  worldPath[pos + 2],  worldPath[pos + 3]);
+    const ex = offset & sizeMask;
+    const ey = (offset >>> sizeBits) & sizeMask ;
+
+    //console.log("Calculate next Path Segment #" + pos + " for ticket #" + ticket, sx, sy, ex, ey);
+
+    let path = localPath(
         map,
         sx,
         sy,
@@ -69,7 +76,7 @@ function doSubPathRoundRobin()
         ey,
     );
 
-    console.log("Path Segment for ticket #" + ticket, path);
+    //console.log("Path Segment for ticket #" + ticket, path);
 
     // XXX: Do not give up, try next
     if (!path)
@@ -84,9 +91,16 @@ function doSubPathRoundRobin()
         return;
     }
 
+    path = simplify(path, 0.7);
     entry.path = entry.path.concat(path);
-    if (++entry.pos === path.length - 1)
+
+
+    //console.log(entry.path);
+
+    entry.pos += 2;
+    if (entry.pos >= worldPath.length - 4)
     {
+        //console.log("Done with ticket #" + ticket);
         reply(
             ticket,
             {
@@ -95,7 +109,7 @@ function doSubPathRoundRobin()
             }
         );
 
-        paths.delete(ticket)
+        paths.delete(ticket);
 
         if (paths.size === 0)
         {
@@ -180,13 +194,14 @@ function handleIncomingMessage(ev)
                 return;
             }
 
-            const macroPath = macroPath(
+            const worldPath = macroPath(
                 map,
                 sx, sy,
                 ex, ey
             );
+            //console.log("World path for ticket #" + ticket, worldPath);
 
-            if (macroPath == null)
+            if (worldPath == null)
             {
                 reply(
                     ticket,
@@ -202,9 +217,9 @@ function handleIncomingMessage(ev)
                     ticket,
                     {
                         map,
-                        macroPath,
+                        worldPath,
                         pos: 0,
-                        ticket,
+                        path: [],
                         reportSegments
                     }
                 );

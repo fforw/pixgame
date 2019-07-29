@@ -31,7 +31,7 @@ Jimp.read(path.join(__dirname, "../src/assets/river-mask.png")).then(img => {
                     const yNotNull = my !== 0;
                     const xNotNull = mx !== 0;
                     const offsetExpression =
-                        (yNotNull ? "( y " + (yNegative ? "-" : "+") + " " + Math.abs(my) + ")" : "y") + " * size + " +
+                        (yNotNull ? "(( y " + (yNegative ? "-" : "+") + " " + Math.abs(my) + ")" : "(y") + " << sizeBits) + " +
                          (xNotNull ? (Math.sign(mx) > 0 ? " x + " : "x - ") + Math.abs(mx) : "x") ;
                     if (data[offset])
                     {

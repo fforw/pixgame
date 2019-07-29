@@ -8,16 +8,51 @@ import Delaunay from "./util/Delaunay";
 import { linesCross } from "./util/intersection";
 
 import RTree from "rtree"
+import {
+    _ICE,
+    _RIVER,
+    _SAND,
+    _WATER,
+    _WOODS,
+    BLOCKED,
+    BOULDER,
+    BOULDER_2,
+    BOULDER_3,
+    DARK,
+    DIRT,
+    DOT,
+    EMPTY,
+    GRASS,
+    ICE,
+    ICE2,
+    LARGE_TREE,
+    LARGE_TREE_2,
+    PLANT,
+    PLANT_2,
+    PLANT_3,
+    RIVER,
+    ROCK,
+    SAND,
+    SMALL_TREE,
+    SMALL_TREE_2,
+    SMALL_TREE_3,
+    thingWalkability,
+    tileVillageRating,
+    WATER,
+    WOODS,
+    WOODS2
+} from "./tilemap-config";
 
-const TAU = Math.PI * 2;
+
+export const TAU = Math.PI * 2;
 
 const N1 = 0.4;
 const N2 = 1.7;
 const N3 = 20;
 const N4 = 5;
 
-const RELATIVE_CITY_RADIUS = 0.034;
-const MIN_CITY_RATING = 2000;
+const RELATIVE_CITY_RADIUS = 0.3;
+const MIN_CITY_RATING = 1200;
 
 
 function clamp(v)
@@ -31,43 +66,6 @@ const WATER_LINE = 0.05;
 const BEACH_LINE = 0.07;
 const WOODS_LINE = 0.09;
 const MOUNTAIN_LINE = 0.5;
-
-// tiles
-export const DARK = 0;
-export const WATER = 1;
-export const SAND = 2;
-export const GRASS = 3;
-export const DIRT = 4;
-export const ROCK = 5;
-export const WOODS = 6;
-export const WOODS2 = 7;
-export const RIVER = 8;
-export const ICE = 9;
-export const ICE2 = 10;
-
-// things
-export const EMPTY = 1;
-export const PLANT = 2;
-export const PLANT_2 = 3;
-export const PLANT_3 = 4;
-export const DOT = 5;
-export const _RIVER = 6;
-export const _WOODS = 7;
-export const SENSOR = 8;
-export const _SAND = 9;
-export const _ICE = 10;
-export const BLOCKED = 11;   // non-walkable from here on
-export const _WATER = 12;
-export const LARGE_TREE = 13;
-export const LARGE_TREE_2 = 14;
-export const SMALL_TREE = 15;
-export const SMALL_TREE_2 = 16;
-export const SMALL_TREE_3 = 17;
-export const BOULDER = 18;
-export const BOULDER_2 = 19;
-export const BOULDER_3 = 20;
-export const HOUSE = 21;
-export const IGLOO = 22;
 
 
 function calcWeightSum(array)
@@ -100,70 +98,17 @@ export const tileNames = [
     "ICE2"
 ];
 
-export const thingNames = [
-    "-",
-    "EMPTY",
-    "PLANT",
-    "PLANT_2",
-    "PLANT_3",
-    "DOT",
-    "_RIVER",
-    "_WOODS",
-    "SENSOR",
-    "_SAND",
-    "BLOCKED",
-    "_WATER",
-    "LARGE_TREE",
-    "LARGE_TREE_2",
-    "SMALL_TREE",
-    "SMALL_TREE_2",
-    "SMALL_TREE_3",
-    "BOULDER",
-    "BOULDER_2",
-    "BOULDER_3",
-    "HOUSE",
-    "IGLOO"
-];
-
-export const thingWalkability = [
-
-    1, // EMPTY
-    1, // PLANT
-    1, // PLANT_2
-    1, // PLANT_3
-    1, // DOT
-    3, // _RIVER
-    1, // _WOODS
-    1, // SENSOR
-    2, // _SAND
-    1.5, // _ICE
-    4, // BLOCKED
-    4, // _WATER
-    4, // LARGE_TREE
-    4, // LARGE_TREE_2
-    3, // SMALL_TREE
-    3, // SMALL_TREE_2
-    3, // SMALL_TREE_3
-    4, // BOULDER
-    3, // BOULDER_2
-    4, // BOULDER_3
-    4, // HOUSE
-    4, // IGLOO
-
-];
 
 
-const tileVillageRating = [
-    0,  // DARK
-    0,  // WATER
-    0.5,  // SAND
-    1,  // GRASS
-    1,  // DIRT
-    -2,  // ROCK
-    1,  // WOODS
-    1,  // WOODS2
-    0,  // RIVER
-];
+
+
+
+
+
+
+
+
+
 
 
 function normalizeSpawnTable(table)
@@ -307,9 +252,9 @@ function spawn(map, spawns)
 
 function spawnForBlock(map, mapOffset, tile)
 {
-    const {things, size } = map;
+    const {things, sizeBits } = map;
 
-    const worldMask = (size * size)-1
+    const worldMask = (1 << (sizeBits + sizeBits)) - 1;
 
     if (things[mapOffset] !== 0)
     {
@@ -506,9 +451,9 @@ function randomProbes(map)
 {
     const probes = [];
 
-    const {size} = map;
+    const {size, sizeBits} = map;
 
-    const probeCount = size * size / 1000;
+    const probeCount = (1 << (sizeBits + sizeBits)) / 1000;
 
     //console.log("Probe count =", probeCount);
 
@@ -535,10 +480,10 @@ function randomProbes(map)
 
 
 const directions = [
+    -1, 0,
+    0, -1,
     1, 0,
     0, 1,
-    -1, 0,
-    0, -1
 ];
 
 
@@ -919,35 +864,96 @@ function findNonRiverTile(map, x, y)
 }
 
 
+function mergeOverlapping(longRivers)
+{
+    let length = longRivers.length;
+    for (let i = 0; i < length; i++)
+    {
+        const {centerX, centerY, points, radius} = longRivers[i];
+
+        for (let j = length - 1; j > i; j--)
+        {
+            const {centerX : centerX2, centerY: centerY2, radius : radius2} = longRivers[j];
+
+            const r = Math.max(radius, radius2);
+
+            const dx = centerX2 - centerX;
+            const dy = centerY2 - centerY;
+
+            if (dx * dx + dy * dy < r * r)
+            {
+                const newRadius = Math.sqrt(radius * radius + radius2 * radius2);
+                longRivers[i].radius = newRadius;
+
+                const index = findPosition(points, newRadius);
+
+                longRivers[i].centerX = points[index];
+                longRivers[i].centerY = points[index + 1];
+
+
+                for (let k= j + 1; k < length; k++)
+                {
+                    longRivers[k - 1] = longRivers[k];
+                }
+                length--;
+                j++;
+            }
+        }
+
+    }
+
+    return longRivers.slice(0, length);
+}
+
+
+function findPosition(points, radius)
+{
+
+    const length = points.length;
+
+    const mouthX = points[length - 2];
+    const mouthY = points[length - 1];
+
+    let i;
+    for (i = length - 4; i > 0; i -= 2)
+    {
+        let x = points[i] - mouthX;
+        let y = points[i + 1] - mouthY;
+
+        const dist = Math.sqrt(x * x + y * y);
+
+        if (dist > radius * 0.75)
+        {
+            //console.log("reached radius");
+            break;
+        }
+    }
+    return i;
+}
+
+
 function planCities(map, rivers)
 {
-    const longRivers = findLongRivers(map, rivers)
+    let longRivers = findLongRivers(map, rivers)
         .filter(
             (spring, idx) => {
                 const {points} = spring;
 
-                const len = points.length;
+                const length = points.length;
+
+                const mouthX = points[length - 2];
+                const mouthY = points[length - 1];
+                const dx = points[0] - mouthX;
+                const dy = points[1] - mouthY;
+
+                const len = Math.sqrt(dx*dx+dy*dy);
+
+
                 const radius = (len * RELATIVE_CITY_RADIUS) | 0;
 
-                const mouthX = points[len - 2];
-                const mouthY = points[len - 1];
+                const index = findPosition(points, radius);
 
-                let i;
-                for (i = len - 4; i > 0; i -= 2)
-                {
-                    let x = points[i] - mouthX;
-                    let y = points[i + 1] - mouthY;
-
-                    const dist = Math.sqrt(x * x + y * y);
-
-                    if (dist > radius)
-                    {
-                        //console.log("reached radius");
-                        break;
-                    }
-                }
-
-                const {px, py} = findNonRiverTile(map, points[i], points[i + 1]);
+                const {px, py} = findNonRiverTile(map, points[index], points[index + 1]);
 
                 const radiusSquared = radius * radius;
                 let sum = 0;
@@ -965,13 +971,17 @@ function planCities(map, rivers)
                 spring.centerY = (py & map.sizeMask);
                 spring.radius = radius;
 
-                const isLong = sum > MIN_CITY_RATING;
+                const limit = MIN_CITY_RATING ;
+                const isLong = sum > limit;
 
-                //console.log("RATING" + idx, sum);
+                console.log("RATING" + idx, sum);
 
                 return isLong;
 
             });
+
+
+    longRivers = mergeOverlapping(longRivers);
 
     for (let j = 0; j < longRivers.length; j++)
     {
@@ -993,7 +1003,7 @@ function planCities(map, rivers)
 }
 
 
-function flatten(arrayOfArrays)
+export function flatten(arrayOfArrays)
 {
     let out = [];
     for (let i = 0; i < arrayOfArrays.length; i++)
@@ -1049,7 +1059,7 @@ function filterWalkable(map, vertices, triangles, mask)
 {
     const walkable = [];
 
-    const { size } = map;
+    const { sizeBits } = map;
 
     for (let i = 0; i < triangles.length; i += 3)
     {
@@ -1067,7 +1077,7 @@ function filterWalkable(map, vertices, triangles, mask)
         const cx = ((x0 + x1 + x2) / 3)|0;
         const cy = ((y0 + y1 + y2) / 3)|0;
 
-        if (mask[cy * size + cx])
+        if (mask[(cy  << sizeBits) + cx])
         {
             walkable.push(offsetA, offsetB, offsetC);
         }
@@ -1135,12 +1145,13 @@ export function polyMinMax(polygons)
 
 const xCoords = new Array(256);
 
-export function xOrFillPolygon(mask, polygon, size, minMax, minMaxOff)
+export function xOrFillPolygon(mask, polygon, sizeBits, minMax, minMaxOff)
 {
     const minY = minMax[minMaxOff];
     const maxY = minMax[minMaxOff + 1];
 
-    let line = ((minY)|0) * size;
+    const size = 1 << sizeBits;
+    let line = ((minY)|0) << sizeBits;
     for( let y = minY; y <= maxY; y++)
     {
         const { length } = polygon;
@@ -1213,18 +1224,19 @@ export function xOrFillPolygon(mask, polygon, size, minMax, minMaxOff)
  * Creates a binary mask for the given array of n-sided polygons.
  *
  * @param polygons
- * @param size
+ * @param sizeBits
+ * @param minMax
  * @return {Uint8Array}
  */
-function createMask(polygons, size, minMax)
+function createMask(polygons, sizeBits, minMax)
 {
-    const mask = new Uint8Array(size * size);
+    const mask = new Uint8Array(1 << (sizeBits + sizeBits));
 
 
     for (let i = 0; i < polygons.length; i++)
     {
         const polygon = polygons[i];
-        xOrFillPolygon(mask, polygon, size, minMax, i * 4 + 2);
+        xOrFillPolygon(mask, polygon, sizeBits, minMax, i * 4 + 2);
     }
     return mask;
 }
@@ -1445,7 +1457,39 @@ function calculateEdgeCost(map, vertices, startOffset, endOffset)
     const yStep = (y0 < y1 ? +1 : -1);
     let error = xDist + yDist;
 
-    let score = thingWalkability[map.getThing(x0, y0)];
+    const scorePosition = (x,y) => {
+        const t0 = thingWalkability[map.getThing(x, y)];
+
+        const te = thingWalkability[map.getThing(x + 1, y)];
+        const ts = thingWalkability[map.getThing(x, y + 1)];
+        const tn = thingWalkability[map.getThing(x - 1, y)];
+        const tw = thingWalkability[map.getThing(x, y - 1)];
+
+        if (
+            (te === LARGE_TREE || te === LARGE_TREE_2 ) ||
+            (ts === LARGE_TREE || ts === LARGE_TREE_2 ) ||
+            (tn === LARGE_TREE || tn === LARGE_TREE_2 ) ||
+            (tw === LARGE_TREE || tw === LARGE_TREE_2 )
+        )
+        {
+            return LARGE_TREE;
+        }
+
+        if (
+            ( te === SMALL_TREE || te === SMALL_TREE_2 || te === SMALL_TREE_3) ||
+            ( ts === SMALL_TREE || ts === SMALL_TREE_2 || ts === SMALL_TREE_3) ||
+            ( tn === SMALL_TREE || tn === SMALL_TREE_2 || tn === SMALL_TREE_3) ||
+            ( tw === SMALL_TREE || tw === SMALL_TREE_2 || tw === SMALL_TREE_3)
+        )
+        {
+            return SMALL_TREE;
+        }
+
+        return t0;
+    };
+
+
+    let score = scorePosition(x0,y0);
     while (x0 !== x1 || y0 !== y1)
     {
         if (2 * error - yDist > xDist - 2 * error)
@@ -1461,7 +1505,7 @@ function calculateEdgeCost(map, vertices, startOffset, endOffset)
             y0 += yStep;
         }
 
-        score += thingWalkability[map.getThing(x0, y0)];
+        score += scorePosition(x0, y0);
     }
 
     return score;
@@ -1609,7 +1653,7 @@ function planRoads(map, cities, updateProgress, percent, start)
     console.log("SIMPLIFIED: polygons = ", simplified.length, ", vertexes = ", simplified.reduce((count, array) => count + array.length, 0), (now() - start ) + "ms");
 
     const minMax = polyMinMax(simplified);
-    const mask = createMask(simplified, map.size, minMax);
+    const mask = createMask(simplified, map.sizeBits, minMax);
 
     const vertices = flatten(simplified);
     const triangles = Delaunay.triangulate(vertices);
@@ -1628,6 +1672,7 @@ function planRoads(map, cities, updateProgress, percent, start)
 
     map.mask = mask;
     map.navMesh = navMesh;
+    map.cities = cities;
 }
 
 
@@ -1637,8 +1682,8 @@ export default class WorldMap {
     constructor(size = 800, seed, tiles, things, sensors, navMesh, mask, worldId)
     {
         this.worldId = worldId;
-        const lg = Math.log(size) / Math.log(2);
-        if ((lg % 1) !== 0)
+        const sizeBits = Math.log(size) / Math.log(2);
+        if ((sizeBits % 1) !== 0)
         {
             throw new Error("Size must be power of two: " + size);
         }
@@ -1653,9 +1698,13 @@ export default class WorldMap {
         this.fineMask = (size << 4) - 1;
 
         this.invSizeFactor = 1 / size;
-        this.tiles = tiles || new Uint8Array(size * size);
-        this.things = things || new Uint8Array(size * size);
-        this.sensors = sensors || {};
+        this.sizeBits = sizeBits;
+
+        const arrayLen = 1 << (sizeBits + sizeBits);
+
+        this.tiles = tiles || new Uint8Array(arrayLen);
+        this.things = things || new Uint8Array(arrayLen);
+        this.sensors = sensors || new Map();
 
         this.navMesh = navMesh || null;
         this.mask = mask || null;
@@ -1665,72 +1714,56 @@ export default class WorldMap {
 
     read(x, y)
     {
-        return this.tiles[(y & this.sizeMask) * this.size + (x & this.sizeMask)];
+        const { sizeMask, sizeBits } = this;
+
+        return this.tiles[((y & sizeMask) << sizeBits) + (x & sizeMask)];
     }
 
 
     getThing(x, y)
     {
-        return this.things[(y & this.sizeMask) * this.size + (x & this.sizeMask)];
+        const { sizeMask, sizeBits } = this;
+        return this.things[((y & sizeMask) << sizeBits) + (x & sizeMask)];
     }
+
 
 
     write(x, y, tile)
     {
-        this.tiles[(y & this.sizeMask) * this.size + (x & this.sizeMask)] = tile;
+        const { sizeMask, sizeBits } = this;
+        this.tiles[((y & sizeMask) << sizeBits) + (x & sizeMask)] = tile;
     }
 
 
     putThing(x, y, thing)
     {
-        if (__DEV)
-        {
-            if (thing === SENSOR)
-            {
-                throw new Error("Cannot just put sensor. Sensors need to be registered with registerSensor");
-            }
-        }
-
-        this.things[(y & this.sizeMask) * this.size + (x & this.sizeMask)] = thing;
+        const { sizeMask, sizeBits } = this;
+        this.things[((y & sizeMask) << sizeBits) + (x & sizeMask)] = thing;
     }
 
 
     registerSensor(x, y, sensor)
     {
-        const off = (y & this.sizeMask) * this.size + (x & this.sizeMask);
-        this.things[off] = SENSOR;
-        this.sensors[off] = sensor;
+        const { sizeMask, sizeBits } = this;
+        const off = ((y & sizeMask) << sizeBits) + (x & sizeMask);
 
+        //console.log("Register sensor", sensor, " for ", off);
+        this.sensors.set(off, sensor);
     }
 
     lookupSensor(x,y, dx, dy)
     {
-        
-
-        const off = (y & this.sizeMask) * this.size + (x & this.sizeMask);
-        const sensor = this.sensors[off];
-
-        if (sensor.options.fromDirections & 1 << direction)
-        {
-
-        }
-
+        const { sizeMask, sizeBits } = this;
+        const off = ((y & sizeMask) << sizeBits) + (x & sizeMask);
+        const sensor = this.sensors.get(off);
         return sensor;
     }
 
     unregisterSensor(x, y, sensor)
     {
-
-        const off = (y & this.sizeMask) * this.size + (x & this.sizeMask);
-
-        const existing = this.things[off];
-        if (existing !== SENSOR)
-        {
-            throw new Error("Error deregistering sensor: tile is a " + thingNames[existing]);
-        }
-
-        this.things[off] = 0;
-        delete this.sensors[off];
+        const { sizeMask, sizeBits } = this;
+        const off = ((y & sizeMask) << sizeBits) + (x & sizeMask);
+        this.sensors.delete(off);
     }
 
 
@@ -1964,13 +1997,14 @@ export default class WorldMap {
                 vertices,
                 triangles
             },
-            mask: this.mask
+            mask: this.mask,
+            cities: this.cities
         }
     }
 
     static deserialize(obj)
     {
-        const { worldId, size, seed, things, tiles, sensors, mask, meshData } = obj;
+        const { worldId, size, seed, things, tiles, sensors, mask, meshData, cities } = obj;
 
         const map = new WorldMap(
             size,
@@ -1984,6 +2018,7 @@ export default class WorldMap {
         );
 
         map.navMesh = buildNavigationMesh(map, meshData.vertices, meshData.triangles);
+        map.cities = cities;
 
         return map;
     }

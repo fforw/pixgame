@@ -3,13 +3,14 @@ import "./pixi-tilemap"
 // noinspection ES6UnusedImports
 import STYLES from "./style-height.css"
 
-import { BLOCKED, isPointInTriangle } from "./WorldMap";
+import { isPointInTriangle} from "./WorldMap";
 import Services from "./workers/Services";
 import Prando from "prando";
 import now from "performance-now";
 import macroPath, { localPath, localPathStep, pointDistance, searchWalkable } from "./navigation";
 
 import raf from "raf"
+import { BLOCKED, thingWalkability } from "./tilemap-config";
 
 let drawMask = false;
 
@@ -59,11 +60,11 @@ let path, pathSegment, sx, sy, ex, ey, segmentPos = 0;
 
 function pos(map, startPos)
 {
-    const {sizeMask, invSizeFactor} = map;
+    const {sizeMask, sizeBits} = map;
 
     return {
         x: (startPos & sizeMask),
-        y: ((startPos * invSizeFactor) & sizeMask)
+        y: ((startPos >>> sizeBits) & sizeMask)
     };
 }
 
@@ -141,12 +142,12 @@ window.onload = () => {
         }
         else
         {
-            const {sizeMask, invSizeFactor} = map;
+            const {sizeMask, sizeBits} = map;
 
             pathContext = localPath(
                 map,
-                startPos & sizeMask, (startPos * invSizeFactor) & sizeMask,
-                endPos & sizeMask, (endPos * invSizeFactor) & sizeMask,
+                startPos & sizeMask, (startPos >>> sizeBits) & sizeMask,
+                endPos & sizeMask, (endPos >>> sizeBits) & sizeMask,
             );
 
             localPathStep(pathContext);
@@ -193,12 +194,12 @@ window.onload = () => {
                     }
                     else
                     {
-                        const {sizeMask, invSizeFactor} = map;
+                        const {sizeMask, sizeBits} = map;
 
                         pathContext = localPath(
                             map,
-                            startPos & sizeMask, (startPos * invSizeFactor) & sizeMask,
-                            endPos & sizeMask, (endPos * invSizeFactor) & sizeMask,
+                            startPos & sizeMask, (startPos >>> sizeBits) & sizeMask,
+                            endPos & sizeMask, (endPos >>> sizeBits) & sizeMask,
                         );
 
                         ctx.clearRect(0,0, size, size);
@@ -278,7 +279,8 @@ window.onload = () => {
         {
             for (let x = 0; x < aabb.w; x++)
             {
-                const walkable = map.getThing(aabb.x + x, aabb.y + y) < BLOCKED;
+                let thing = map.getThing(aabb.x + x, aabb.y + y);
+                const walkable = thing < BLOCKED;
 
                 if (aabb.x + x === sx && aabb.y + y === sy)
                 {
@@ -292,7 +294,8 @@ window.onload = () => {
                 }
                 else
                 {
-                    ctx.fillStyle = walkable ? "#fff" : "#000";
+                    const v = (128 + (4 - thingWalkability[thing]) * 128 / 4)|0;
+                    ctx.fillStyle = walkable ? `rgb(${v},${v},${v})` : "#000";
                 }
 
                 ctx.fillRect(x * scale, y * scale, scale, scale)
@@ -319,14 +322,14 @@ window.onload = () => {
             }
         }
 
-        const { sizeMask, invSizeFactor } = map;
+        const { sizeMask, sizeBits } = map;
 
         for (let i = 0; i < array.length; i++)
         {
             const { node, f } = array[i];
 
             const px = node & sizeMask;
-            const py = (node * invSizeFactor) & sizeMask;
+            const py = (node >>> sizeBits) & sizeMask;
 
             const value = ((f-minF) * 255 / maxF)|0;
 
@@ -340,7 +343,7 @@ window.onload = () => {
         for (let offset of iterator) {
 
             const px = offset[0] & sizeMask;
-            const py = (offset[0] * invSizeFactor) & sizeMask;
+            const py = (offset[0] >>> sizeBits) & sizeMask;
 
             const x = (px - aabb.x) * scale;
             const y = (py - aabb.y) * scale;

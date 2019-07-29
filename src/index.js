@@ -7,16 +7,21 @@ import STYLES from "./style.css"
 import SceneGraph from "./SceneGraph";
 import WorldScene from "./scenes/WorldScene"
 import StartScene from "./scenes/StartScene"
-import { _RIVER, BLOCKED, HOUSE, IGLOO, RIVER, SAND, SENSOR, thingNames, tileNames } from "./WorldMap"
 import logger from "./util/logger";
 import { getCurrentLayerMask } from "./drawTiles"
 import CanvasWrapper from "./CanvasWrapper"
 import MapWidget from "./MapWidget"
 
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap"
+import { Modal, ModalBody, ModalHeader } from "reactstrap"
+import { SensorMode } from "./sensor";
+import { BLOCKED, HOUSE, IGLOO, RIVER, SAND } from "./tilemap-config";
+import Home from "./scenes/Home";
+
 
 function determineScale(width)
 {
+    console.log("determineScale", width);
+
     let scale = 1;
 
     let curr = width;
@@ -48,21 +53,18 @@ let tileLayer;
 let paused = false;
 let showMap = false;
 
-export const START_X = 1280 * 16;
-export const START_Y = 964 * 16;
+export const POS_X = 1280 * 16;
+export const POS_Y = 964 * 16;
 
-let dx = 0;
-let dy = 0;
-let blocked = false;
 
-const ACCELERATION = 0.6;
+const ACCELERATION = 0.9;
 const SPEED_LIMIT = 15;
 const ZOOM_SPEED = 10;
 const INV_ZOOM_SPEED = 1/ZOOM_SPEED;
 /**
  * Global context object for the scene graph.
  *
- * @type {{app: PIXI.Application, atlas: object, container: PIXI.Container, posX: number, posY: number, controls: {moveUpDown: number, moveLeftRight: number}, tileLayer: PIXI.tilemap.CompositeRectTileLayer, width: number, height: number, scale: number}}
+ * @type {{app: PIXI.Application, atlas: object, container: PIXI.Container, posX: number, posY: number, controls: {moveUpDown: number, moveLeftRight: number}, tileLayer: PIXI.tilemap.CompositeRectTileLayer, width: number, height: number, scale: number, blocked; boolean, dx: number, dy: number, map: WorldMap, worldMap: WorldMap}}
  */
 
 const ctx = {
@@ -73,8 +75,12 @@ const ctx = {
      * Container around our tilemap
      */
     container: null,
-    /** Current WorldMap */
+    /** Current map*/
     map : null,
+    /**
+     * The world map,
+     */
+    worldMap: null,
     /**
      * Current width
      */
@@ -94,8 +100,11 @@ const ctx = {
     /**
      * Current scale
      */
-    posX: START_X,
-    posY: START_Y,
+    posX: POS_X,
+    posY: POS_Y,
+    blocked: false,
+    dx: 0,
+    dy: 0,
     // posX: -3 * 16 - 8, ,
     // posY: -3 * 16, ,
 
@@ -110,6 +119,9 @@ const ctx = {
     }
 };
 
+let interactionSensor;
+let interactionSensorX;
+let interactionSensorY;
 
 function handleMovement(delta)
 {
@@ -129,38 +141,40 @@ function handleMovement(delta)
         const speedLimit = SPEED_LIMIT * (tile === RIVER ? 0.15 : tile === SAND ? 0.4: 1);
         if (moveLeftRight)
         {
-            dx += moveLeftRight *  ACCELERATION;
+            ctx.dx += moveLeftRight *  ACCELERATION;
         }
         else
         {
 
-            dx = Math.abs(dx) > 0.1 ? dx * 0.7 : 0;
+            ctx.dx = Math.abs(ctx.dx) > 0.1 ? ctx.dx * 0.7 : 0;
         }
 
         if (moveUpDown)
         {
-            dy += moveUpDown * ACCELERATION ;
+            ctx.dy += moveUpDown * ACCELERATION ;
         }
         else
         {
-            dy = Math.abs(dy) > 0.1 ? dy * 0.7 : 0;
+            ctx.dy = Math.abs(ctx.dy) > 0.1 ? ctx.dy * 0.7 : 0;
         }
 
-        const speed = Math.sqrt(dx * dx + dy * dy);
+        const speed = Math.sqrt(ctx.dx * ctx.dx + ctx.dy * ctx.dy);
         if (speed > speedLimit)
         {
             const f = speedLimit / speed;
-            dx *= f;
-            dy *= f;
+            ctx.dx *= f;
+            ctx.dy *= f;
         }
 
-        if (Math.abs(dx) > speedLimit)
+        const sdx = Math.sign(ctx.dx);
+        if (Math.abs(ctx.dx) > speedLimit)
         {
-            dx = Math.sign(dx) * speedLimit;
+            ctx.dx = sdx * speedLimit;
         }
-        if (Math.abs(dy) > speedLimit)
+        const sdy = Math.sign(ctx.dy);
+        if (Math.abs(ctx.dy) > speedLimit)
         {
-            dy = Math.sign(dy) * speedLimit;
+            ctx.dy = sdy * speedLimit;
         }
 
 
@@ -170,8 +184,8 @@ function handleMovement(delta)
         let x,y;
         do
         {
-            x = (posX + dx * delta) & map.fineMask;
-            y = (posY + dy * delta) & map.fineMask;
+            x = (posX + ctx.dx * delta) & map.fineMask;
+            y = (posY + ctx.dy * delta) & map.fineMask;
 
             const tx = ((x + 33) >> 4) & map.sizeMask;
             const ty = ((y + 28) >> 4) & map.sizeMask;
@@ -183,18 +197,48 @@ function handleMovement(delta)
 
             if(!canMove)
             {
-                dx *= 0.5;
-                dy *= 0.5;
+                ctx.dx *= 0.5;
+                ctx.dy *= 0.5;
             }
 
-        }  while (!canMove && attempts < 5);
+        }  while (!ctx.blocked && !canMove && attempts < 5);
 
-        if (canMove)
+        if (canMove && !ctx.blocked)
         {
-            if (thing === SENSOR)
+            const { sizeBits } = map;
+
+            const sensor = map.lookupSensor(tx,ty);
+            //sensorLogger(tx + ", " + ty + ", offset = " + ((ty << sizeBits) + tx) + ": " + sensor);
+            if (sensor)
             {
-                const sensor = map.lookupSensor(tx,ty);
-                enterSensor(ctx, sensor);
+                const { fromDirections } = sensor.options;
+
+                const direction = ((sdx > 0) + ((sdy > 0) << 1) + ((sdx < 0) << 2) + ((sdy < 0) << 3));
+
+                if ((fromDirections & direction) !== 0)
+                {
+                    if (sensor.mode === SensorMode.INTERACTION)
+                    {
+                        document.body.className = "interaction";
+                        interactionSensor = sensor;
+                        interactionSensorX = tx;
+                        interactionSensorY = ty;
+
+
+                    }
+                    else
+                    {
+                        document.body.className = null;
+                        interactionSensor = null;
+                        interactionSensorX = 0;
+                        interactionSensorY = 0;
+                    }
+
+                    if (sensor.mode === SensorMode.MOTION)
+                    {
+                        sensor.action(tx,ty);
+                    }
+                }
             }
             else
             {
@@ -206,23 +250,24 @@ function handleMovement(delta)
         else
         {
             //movementLogger("BLOCKED BY " + tileNames[tile] + "/" + thingNames[thing] + ": " + tx + ", " + ty);
-            
-            dx = 0;
-            dy = 0;
-            blocked = true;
+
+            ctx.dx = 0;
+            ctx.dy = 0;
+            ctx.blocked = true;
             //console.log(tx + " x " + ty + ": " + );
         }
     }
 }
 
-const movementLogger = logger("movementLogger");
+const movementLogger = logger("MOVEMENT");
+const sensorLogger = logger("SENSOR");
 
 
 function updateSize(scale)
 {
     const { app } = ctx;
 
-    scale = typeof scale === "number" ? scale : determineScale(window.innerWidth);
+    scale = typeof scale === "number" ? scale : determineScale(Math.max(window.innerWidth, window.innerHeight) * window.devicePixelRatio);
 
     ctx.width = (window.innerWidth / scale) | 0;
     ctx.height = (window.innerHeight / scale) | 0;
@@ -319,12 +364,10 @@ function setup(loader, resources)
 
     //console.log("setup", resources);
 
-    const scale = determineScale(window.innerWidth);
+    const scale = determineScale(Math.max(window.innerWidth, window.innerHeight));
 
     const width = (window.innerWidth / scale)|0;
     const height = (window.innerHeight / scale)|0;
-
-    console.log({width, height})
 
     const halfWidth = width/2;
     const halfHeight = height/2;
@@ -364,7 +407,8 @@ function setup(loader, resources)
 
     const sceneGraph = new SceneGraph([
         StartScene,
-        WorldScene
+        WorldScene,
+        Home
     ], ctx);
 
     app.ticker.add((delta) => {
@@ -382,8 +426,15 @@ function setup(loader, resources)
         switch(keyCode)
         {
 
+            case 13:
+                if (interactionSensor)
+                {
+                    interactionSensor.action(interactionSensorX, interactionSensorY);
+                }
+                break;
             case 49:
-                ctx.scale = determineScale(window.innerWidth)
+                ctx.scale = determineScale(Math.max(window.innerWidth, window.innerHeight));
+
                 break;
             // map
             case 77:
@@ -399,8 +450,8 @@ function setup(loader, resources)
                 togglePause();
                 break;
             case 36:
-                ctx.posX = START_X;
-                ctx.posY = START_Y;
+                ctx.posX = POS_X;
+                ctx.posY = POS_Y;
                 break;
             case 35:
                 ctx.posX = 0;
@@ -440,14 +491,14 @@ function setup(loader, resources)
             case 40:
             case 83:
                 ctx.controls.moveUpDown = 0;
-                blocked = false;
+                ctx.blocked = false;
                 break;
             case 37:
             case 65:
             case 39:
             case 68:
                 ctx.controls.moveLeftRight = 0;
-                blocked = false;
+                ctx.blocked = false;
                 break;
         }
     }, true);
@@ -463,6 +514,14 @@ function setup(loader, resources)
 
     let zoomDelta = 0;
 
+    window.addEventListener("click", event => {
+
+        if (interactionSensor)
+        {
+            interactionSensor.action(interactionSensorX, interactionSensorY);
+        }
+
+    }, true);
     window.addEventListener("wheel", event => {
 
         const deltaY = Math.sign(event.deltaY);
@@ -473,4 +532,5 @@ function setup(loader, resources)
     sceneGraph.render();
 
     renderReact()
+
 }

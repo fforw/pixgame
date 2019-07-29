@@ -33,7 +33,11 @@ class StartScene extends Scene
             drawDigit(this.map, -off + text.length * 4,-3, 10)
 
         }).then(
-            newMap => this.ctx.graph.goto(WorldScene, { map: newMap })
+            newMap => {
+
+                this.ctx.worldMap = newMap;
+                this.ctx.graph.goto(WorldScene);
+            }
         );
     }
 
