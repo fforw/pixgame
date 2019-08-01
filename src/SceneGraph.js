@@ -10,39 +10,50 @@ export class Scene {
 }
 
 
-function checkClass({classes}, cls)
-{
+const effectResolve = Symbol("effectResolve");
 
-    for (let i = 0; i < classes.length; i++)
+const secret = Symbol("SceneGraph secret");
+
+function setCurrent(graph, SceneClass, input, parent)
+{
+    const { ctx, classes } = graph[secret];
+
+    if (classes.indexOf(SceneClass) < 0)
     {
-        const c = classes[i];
-        if (c === cls)
-        {
-            return;
-        }
+        throw new Error(SceneClass + " is not a registered class in this scene graph")
     }
 
-    throw new Error(cls + " is not a registered class in this scene graph")
+
+    const current = new SceneClass(ctx, input, parent);
+    graph[secret].current = current;
+
+    graph[secret].hasOnEnter = typeof current.onEnter === "function";
+    graph[secret].hasOnExit = typeof current.onExit === "function";
+    graph[secret].hasTicker = typeof current.ticker === "function";
+    graph[secret].hasRender = typeof current.render === "function";
 
 }
-
-const effectResolve = Symbol("effectResolve");
 
 class SceneGraph {
     constructor(classes, ctx, input)
     {
-        this.classes = classes;
-        this.ctx = ctx;
+        ctx.graph = this;
 
-        this.ctx.graph = this;
-
-        this.current = new classes[0](this.ctx, input);
+        this[secret] = {
+            classes,
+            ctx,
+            
+            effectQueue: [],
+            time: 0,
+            hasOnEnter: false,
+            hasOnExit: false,
+            hasTicker: false,
+            hasRender: false
+        };
 
         console.log("SCENE-GRAPH", this);
 
-        this.effectQueue = [];
-
-        this.time = 0;
+        setCurrent(this, classes[0], input, null);
     }
 
 
@@ -55,12 +66,12 @@ class SceneGraph {
      */
     addEffect(effect, start = null, duration = 1000)
     {
+        const { effectQueue, time } = this[secret];
         if (start === null)
         {
-            start = this.time;
+            start = time;
         }
 
-        const { effectQueue } = this;
         const end = start + duration;
 
         return new Promise(resolve => {
@@ -87,11 +98,10 @@ class SceneGraph {
 
     runEffects(delta)
     {
-        const { effectQueue } = this;
 
-        this.time += delta;
+        this[secret].time += delta;
 
-        const { time } = this;
+        const { effectQueue, time } = this[secret];
 
         let doneLimit = -1;
 
@@ -139,31 +149,37 @@ class SceneGraph {
 
     onEnter()
     {
-        if (typeof this.current.onEnter === "function")
+        const { hasOnEnter, current } = this[secret];
+
+        console.log({hasOnEnter, current})
+
+        if (hasOnEnter)
         {
-            //console.log("Invoking onEnter on ", this.current)
-            this.current.onEnter();
+            //console.log("Invoking onEnter on ", current)
+            current.onEnter();
         }
     }
 
 
     onExit()
     {
-        if (typeof this.current.onExit === "function")
+        const { hasOnExit, current } = this[secret];
+        if (hasOnExit)
         {
-            this.current.onExit();
+            current.onExit();
         }
     }
 
 
     ticker(delta)
     {
+        const { hasTicker, current } = this[secret];
         this.runEffects(delta);
 
 
-        if (typeof this.current.ticker === "function")
+        if (hasTicker)
         {
-            this.current.ticker(delta);
+            current.ticker(delta);
         }
 
         this.render();
@@ -171,44 +187,39 @@ class SceneGraph {
 
     render()
     {
-        if (typeof this.current.render === "function")
+        const { hasRender, current } = this[secret];
+        if (hasRender)
         {
-            this.current.render();
+            current.render();
         }
     }
 
-
-
-
-
     push(SceneClass, input)
     {
-        checkClass(this, SceneClass);
-        this.current = new SceneClass(this.ctx, input, this.current);
+        setCurrent(this, SceneClass, input, this[secret].current);
         this.onEnter();
     }
 
     pop()
     {
-        const { parent } = this.current;
+        const { parent } = this[secret].current;
         if (!parent)
         {
             throw new Error("Cannot pop without parent");
         }
 
         this.onExit();
-        this.current = parent;
+
+        this[secret].current = parent;
     }
 
 
 
     goto(SceneClass, input)
     {
-        checkClass(this, SceneClass);
-        this.current = new SceneClass(this.ctx, input, null);
+        setCurrent(this, SceneClass, input, null);
         this.onEnter();
     }
-
 }
 
 

@@ -5,7 +5,7 @@ import ReactDOM from "react-dom"
 // noinspection ES6UnusedImports
 import STYLES from "./style.css"
 import SceneGraph from "./SceneGraph";
-import WorldScene from "./scenes/WorldScene"
+import WorldScene, { START_X, START_Y } from "./scenes/WorldScene"
 import StartScene from "./scenes/StartScene"
 import logger from "./util/logger";
 import { getCurrentLayerMask } from "./drawTiles"
@@ -53,9 +53,14 @@ let tileLayer;
 let paused = false;
 let showMap = false;
 
-export const POS_X = 1280 * 16;
-export const POS_Y = 964 * 16;
-
+// export const POS_X = START_X * 16;
+// export const POS_Y = START_Y * 16;
+// export const POS_X = 1561 * 16;
+// export const POS_Y = 365 * 16;
+// export const POS_X = 1184 * 16;
+// export const POS_Y = 1090 * 16;
+export const POS_X = 1151 * 16;
+export const POS_Y = 856 * 16;
 
 const ACCELERATION = 0.9;
 const SPEED_LIMIT = 15;
@@ -116,7 +121,11 @@ const ctx = {
         moveUpDown: 0,
         action: false,
         meta: false
-    }
+    },
+
+    maxFrameWidth: 0,
+    maxFrameHeight: 0
+
 };
 
 let interactionSensor;
@@ -358,9 +367,44 @@ function renderReact()
 }
 
 
+function findFrameMaximum(atlas)
+{
+    const { frames } = atlas;
+
+    let maxW = 0;
+    let maxH = 0;
+
+    for (let name in frames)
+    {
+        if (frames.hasOwnProperty(name))
+        {
+            const { frame } = frames[name];
+
+            if (frame.w > maxW)
+            {
+                maxW = frame.w;
+            }
+            if (frame.h > maxH)
+            {
+                maxH = frame.h;
+            }
+        }
+    }
+
+    maxW = Math.ceil(maxW / 16);
+    maxH = Math.ceil(maxH / 16);
+
+    console.log("Frame maximums:", maxW, maxH);
+
+    return [ maxW, maxH  ];
+}
+
+
 function setup(loader, resources)
 {
     const atlas = resources["atlas/atlas-0.json"].data;
+
+    const [ maxFrameWidth, maxFrameHeight ] = findFrameMaximum(atlas);
 
     //console.log("setup", resources);
 
@@ -402,7 +446,9 @@ function setup(loader, resources)
         height,
         app,
         container,
-        scale
+        scale,
+        maxFrameWidth,
+        maxFrameHeight
     });
 
     const sceneGraph = new SceneGraph([

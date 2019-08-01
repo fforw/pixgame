@@ -2,34 +2,49 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="dc0a362a-a522-4944-8286-e43e9094aabd" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/src/tilemap-config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tooling/fix-tilemap-constants.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/index-stone.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tooling/texture.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/atlas/atlas-0.json" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/atlas-0.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/atlas/atlas-0.png" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/atlas-0.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/atlas/src/atlas.json" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/src/atlas.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/atlas/src/ms-dirt.png" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/src/ms-dirt.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CanvasWrapper.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/CanvasWrapper.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/SceneGraph.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/SceneGraph.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/WorldMap.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/WorldMap.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/assets/base.blend" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/base.blend" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/assets/base.blend1" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/base.blend1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/assets/fridge.blend" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/fridge.blend" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/assets/fridge.blend1" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/fridge.blend1" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/drawTiles.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/drawTiles.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/flood.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/flood.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index-height.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/index-height.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index-local.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/index-local.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/navigation.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/navigation.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pixi-tilemap.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/pixi-tilemap.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/scenes/StartScene.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scenes/StartScene.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/scenes/WorldScene.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scenes/WorldScene.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/sensor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/sensor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/template.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/template.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/workers/_services.worker.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/workers/_services.worker.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/synch.sh" beforeDir="false" afterPath="$PROJECT_DIR$/synch.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test.js" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tooling/build-atlas.js" beforeDir="false" afterPath="$PROJECT_DIR$/tooling/build-atlas.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tooling/build-river-mask.js" beforeDir="false" afterPath="$PROJECT_DIR$/tooling/build-river-mask.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tilemap-config.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/tilemap-config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/workers/Services.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/workers/Services.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-10-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-10-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-11.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-12.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-13.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-14.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-15.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-5-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-5-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-8.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-m1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-m2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-m3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tooling/ms-masks.bak/case-m4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/webpack.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/webpack.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -122,8 +137,8 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="javascript.nodejs.core.library.configured.version" value="8.16.0" />
-    <property name="js.last.introduce.type" value="LET" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/tooling" />
+    <property name="js.last.introduce.type" value="CONST" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/tilemap-config.js" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -136,7 +151,7 @@
     <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.splitter.main.proportions" value="0.3" />
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Color Scheme Font" />
+    <property name="settings.editor.selected.configurable" value="com.intellij.codeInsight.hints.config.SingleLanguageInlayHintsConfigurable" />
     <property name="ts.external.directory.path" value="$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external" />
   </component>
   <component name="RecentsManager">
@@ -168,7 +183,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Node.js.fix-tilemap-constants.js">
+  <component name="RunManager" selected="Node.js.build-atlas.js">
     <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
       <Host>localhost</Host>
       <Port>5050</Port>
@@ -201,6 +216,9 @@
     <configuration name="fix-tilemap-constants.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="fix-tilemap-constants.js" working-dir="$PROJECT_DIR$/tooling">
       <method v="2" />
     </configuration>
+    <configuration name="texture.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="texture.js" working-dir="$PROJECT_DIR$/tooling">
+      <method v="2" />
+    </configuration>
     <configuration name="upscale-test.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" node-parameters="-r @babel/register" path-to-js-file="upscale-test.js" working-dir="$PROJECT_DIR$/tooling">
       <method v="2" />
     </configuration>
@@ -224,22 +242,6 @@
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
-    </configuration>
-    <configuration name="Tests" type="mocha-javascript-test-runner" temporary="true">
-      <node-interpreter>project</node-interpreter>
-      <node-options>-r @babel/register</node-options>
-      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
-      <working-directory>$PROJECT_DIR$</working-directory>
-      <pass-parent-env>true</pass-parent-env>
-      <envs>
-        <env name="BABEL_ENV" value="test" />
-      </envs>
-      <ui>bdd</ui>
-      <extra-mocha-options />
-      <test-kind>DIRECTORY</test-kind>
-      <test-directory>$PROJECT_DIR$/test</test-directory>
-      <recursive>true</recursive>
-      <method v="2" />
     </configuration>
     <configuration default="true" type="mocha-javascript-test-runner">
       <node-interpreter>project</node-interpreter>
@@ -276,19 +278,19 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Mocha.Tests" />
       <item itemvalue="Mocha.simplify.directions" />
       <item itemvalue="Node.js.build-atlas.js" />
       <item itemvalue="Node.js.fix-tilemap-constants.js" />
       <item itemvalue="Node.js.upscale-test.js" />
+      <item itemvalue="Node.js.texture.js" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Node.js.fix-tilemap-constants.js" />
         <item itemvalue="Node.js.build-atlas.js" />
+        <item itemvalue="Node.js.fix-tilemap-constants.js" />
+        <item itemvalue="Node.js.texture.js" />
         <item itemvalue="Node.js.upscale-test.js" />
         <item itemvalue="Mocha.simplify.directions" />
-        <item itemvalue="Mocha.Tests" />
       </list>
     </recent_temporary>
   </component>
@@ -330,7 +332,9 @@
       <workItem from="1564131804760" duration="37127000" />
       <workItem from="1564222443731" duration="29588000" />
       <workItem from="1564308719480" duration="22972000" />
-      <workItem from="1564392627376" duration="5157000" />
+      <workItem from="1564392627376" duration="12510000" />
+      <workItem from="1564572244771" duration="27376000" />
+      <workItem from="1564652140841" duration="6198000" />
     </task>
     <servers />
   </component>

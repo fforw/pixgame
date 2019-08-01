@@ -7,13 +7,12 @@ import { BLOCKED, DIRT, EMPTY, HOUSE, IGLOO, SAND, SMALL_TREE, SOIL, SOIL_2 } fr
 import Home from "./Home";
 
 export const HOUSE_X = 1276;
-export const HOUSE_Y = 960;
+export const HOUSE_Y = 955;
 export const IGLOO_X = -2;
 export const IGLOO_Y = -4;
 
-
-const START_X = 1280;
-const START_Y = 964;
+export const START_X = 1280;
+export const START_Y = 959;
 const END_X = 1438;
 const END_Y = 1690;
 
@@ -83,10 +82,10 @@ class WorldScene extends Scene {
         worldMap.putThing(IGLOO_X + 2, IGLOO_Y + 0, BLOCKED);
 
 
-        const fieldX = HOUSE_X + 8;
-        const fieldY = HOUSE_Y + 2;
+        const fieldX = HOUSE_X - 5;
+        const fieldY = HOUSE_Y + 6;
 
-        for (let y = 0; y < 3; y++)
+        for (let y = 0; y < 5; y++)
         {
 
             for (let x = 0; x < 3; x++)
@@ -96,6 +95,8 @@ class WorldScene extends Scene {
         }
 
         worldMap.write(fieldX + 1, fieldY + 1, SOIL);
+        worldMap.write(fieldX + 1, fieldY + 2, SOIL);
+        worldMap.write(fieldX + 1, fieldY + 3, SOIL);
 
 
 

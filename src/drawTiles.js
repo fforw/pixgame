@@ -1,4 +1,4 @@
-import { MARCHING_SQUARE_TEXTURES, TEXTURES, THING_SHADOW_TEXTURES, THING_TEXTURES } from "./tilemap-config";
+import { MARCHING_SQUARE_TEXTURES, TEXTURES, THING_SHADOW_TEXTURES, THING_TEXTURES, WOOD } from "./tilemap-config";
 
 
 let layerMask;
@@ -82,7 +82,7 @@ function drawMarchingSquaresTiles(ctx, map, vars)
                         tileLayer.addFrame(
                             texture,
                             screenX + (x << 4) - ((pivot.x * frame.w) | 0),
-                            screenY + (y << 4) - ((pivot.y * frame.h) | 0)
+                            screenY + (y << 4) - ((pivot.y * frame.h) | 0) - (i === WOOD ? 2: 0)
                         );
                     }
                 }
@@ -209,13 +209,13 @@ function drawThings(ctx, map, vars, drawPlayer)
 
 export default function drawTiles(ctx, map, posX, posY, drawPlayer = true)
 {
-    const { tileLayer, width, height } = ctx;
+    const { tileLayer, width, height, maxFrameWidth, maxFrameHeight } = ctx;
 
     const halfWidth = width / 2;
     const halfHeight = height / 2;
 
-    const widthInTiles = Math.ceil(width / 16) + 7;
-    const heightInTiles = Math.ceil(height / 16) + 11;
+    const widthInTiles = Math.ceil(width / 16) + maxFrameWidth;
+    const heightInTiles = Math.ceil(height / 16) + maxFrameHeight;
 
     tileLayer.clear();
 

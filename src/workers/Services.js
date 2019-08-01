@@ -212,7 +212,6 @@ const Services = {
         webWorker.close();
 
     }
-
 };
 
 export default Services;

@@ -115,8 +115,60 @@
                 "x": 10,
                 "y": 55
             }
+        },
+        "castle-wall.png": {
+            "pivot": {
+                "x": 40,
+                "y": 80
+            }
+        },
+        "castle-gate.png": {
+            "pivot": {
+                "x": 41,
+                "y": 125
+            }
+        },
+        "castle-corner.png": {
+            "pivot": {
+                "x": 42,
+                "y": 181
+            }
+        },
+        "castle-corner2.png": {
+            "pivot": {
+                "x": 42,
+                "y": 221
+            }
+        },
+        "castle-river.png": {
+            "pivot": {
+                "x": 42,
+                "y": 155
+            }
+        },
+        "castle-vertical.png": {
+            "pivot": {
+                "x": 8,
+                "y": 88
+            }
+        },
+        "house1.png": {
+            "pivot": {
+                "x": 145,
+                "y": 205
+            }
+        },
+        "house2.png": {
+            "pivot": {
+                "x": 144,
+                "y": 184
+            }
+        },
+        "house3.png": {
+            "pivot": {
+                "x": 60,
+                "y": 162
+            }
         }
-
-
     }
 }

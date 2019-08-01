@@ -18,9 +18,13 @@ import {
     BOULDER,
     BOULDER_2,
     BOULDER_3,
+    CASTLE_CORNER,
+    CASTLE_CORNER2,
+    CASTLE_GATE,
+    CASTLE_RIVER, CASTLE_VERTICAL,
+    CASTLE_WALL,
     DARK,
     DIRT,
-    DOT,
     EMPTY,
     GRASS,
     ICE,
@@ -37,11 +41,14 @@ import {
     SMALL_TREE_2,
     SMALL_TREE_3,
     thingWalkability,
+    tileNames,
     tileVillageRating,
     WATER,
+    WOOD,
     WOODS,
     WOODS2
 } from "./tilemap-config";
+import Sensor, { SensorMode, SensorPlaceholder } from "./sensor";
 
 
 export const TAU = Math.PI * 2;
@@ -51,8 +58,8 @@ const N2 = 1.7;
 const N3 = 20;
 const N4 = 5;
 
-const RELATIVE_CITY_RADIUS = 0.3;
-const MIN_CITY_RATING = 1200;
+const RELATIVE_CITY_SIZE = 0.2;
+const MIN_CITY_RATING = 700;
 
 
 function clamp(v)
@@ -82,34 +89,6 @@ function calcWeightSum(array)
     }
     return sum;
 }
-
-
-export const tileNames = [
-    "DARK",
-    "WATER",
-    "SAND",
-    "GRASS",
-    "DIRT",
-    "ROCK",
-    "WOODS",
-    "WOODS2",
-    "RIVER",
-    "ICE",
-    "ICE2"
-];
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function normalizeSpawnTable(table)
 {
@@ -908,7 +887,6 @@ function mergeOverlapping(longRivers)
 
 function findPosition(points, radius)
 {
-
     const length = points.length;
 
     const mouthX = points[length - 2];
@@ -922,7 +900,7 @@ function findPosition(points, radius)
 
         const dist = Math.sqrt(x * x + y * y);
 
-        if (dist > radius * 0.75)
+        if (dist > radius)
         {
             //console.log("reached radius");
             break;
@@ -931,10 +909,143 @@ function findPosition(points, radius)
     return i;
 }
 
+// outer circle radius factor
+const  SIZE_TO_RADIUS = 0.5 * Math.sqrt(2);
+
+
+function fillThings(map, sx, sy, w, h, thing)
+{
+    for ( let y = 0; y < h; y++)
+    {
+        for ( let x = 0; x < w; x++)
+        {
+            map.putThing(sx + x, sy + y, thing);
+        }
+    }
+}
+
+function fillTilesFn(map, sx, sy, w, h, tileFn)
+{
+    const { size, sizeBits } = map;
+
+    //console.log("fillTilesFn", {sx, sy, w, h});
+
+    let line = sy << sizeBits;
+    for ( let y = 0; y < h; y++)
+    {
+        for ( let x = 0; x < w; x++)
+        {
+            const off = line + sx + x;
+            const result = tileFn( map.tiles[off] );
+
+            //console.log("tileFn(" , tileNames[map.tiles[off]] , ") => " + tileNames[result]);
+
+            map.tiles[off] = result;
+        }
+        line +=  size;
+    }
+}
+
+function getWallThings(map, sx, sy, size)
+{
+
+    const elementSize = size / 5 + 1;
+
+    //console.log("getWallThings", sx, sy, size, "elementSize = ", elementSize);
+
+    const things = new Array(elementSize);
+
+    const gateIndex = map.random.nextInt(1, elementSize - 2);
+
+    //console.log({gateIndex});
+
+    things[0] = map.random.next() < 0.5 ? CASTLE_CORNER : CASTLE_CORNER2;
+    things[elementSize - 1] = map.random.next() < 0.5 ? CASTLE_CORNER : CASTLE_CORNER2;
+    things.fill(CASTLE_WALL, 1, elementSize - 1);
+
+    things[gateIndex] = CASTLE_GATE;
+
+
+    for (let x = 1; x < elementSize - 1; x++)
+    {
+        if (x !== gateIndex)
+        {
+            for (let i = 0; i < 5; i++)
+            {
+                if (map.read(sx + x * 5 + i, sy) === RIVER)
+                {
+                    console.log("Set ", x, "TO CASTLE_RIVER")
+                    things[x] = CASTLE_RIVER;
+                    break;
+                }
+            }
+        }
+    }
+
+    const coverRiver = t => (t === RIVER ? WOOD : (t === GRASS || t === WOODS || t === WOODS2) ? DIRT : t);
+
+    fillTilesFn(map, sx, sy - 4, size, 8, coverRiver);
+
+    //console.log( things.map( t => thingNames[t]));
+
+    return things;
+}
+
+
+function setupCityTiles(map, city)
+{
+    const { centerX, centerY, size } = city;
+
+    const px = centerX - (size >> 1);
+    const py = centerY - (size >> 1);
+
+    fillThings(map,px - 8, py - 8, size + 16, size + 16, 0);
+
+    const width = size;
+    const height = size & ~1;
+
+    const topWall = getWallThings(map, px, py, width);
+    const bottomWall = getWallThings(map, px, py + height - 1, width);
+
+    city.topWall = topWall;
+    city.bottomWall = bottomWall;
+
+    for (let i = 0; i < topWall.length; i++)
+    {
+        const thing = topWall[i];
+        const restTile = thing === CASTLE_GATE ? EMPTY : BLOCKED;
+        for (let j = 0; j < 5; j++)
+        {
+            map.putThing(px + i * 5 + j - 2, py, j === 2 ? thing : restTile);
+        }
+    }
+
+    for (let i = 0; i < bottomWall.length; i++)
+    {
+        const thing = bottomWall[i];
+        const restTile = thing === CASTLE_GATE ? EMPTY : BLOCKED;
+        for (let j = 0; j < 5; j++)
+        {
+            map.putThing(px + i * 5 + j - 2, py + height - 1, j === 2 ? thing : restTile);
+        }
+    }
+
+    for (let y = 1; y < height - 1; y += 2)
+    {
+        map.putThing(px, py + y, CASTLE_VERTICAL);
+        map.putThing(px, py + y + 1, BLOCKED);
+
+        map.putThing(px + size - 1, py + y, CASTLE_VERTICAL);
+        map.putThing(px + size - 1, py + y + 1, BLOCKED);
+    }
+
+    fillThings(map, px + 1, py + 1, width - 2, height - 2, BLOCKED)
+}
+
 
 function planCities(map, rivers)
 {
-    let longRivers = findLongRivers(map, rivers)
+    let cities = findLongRivers(map, rivers)
         .filter(
             (spring, idx) => {
                 const {points} = spring;
@@ -948,12 +1059,13 @@ function planCities(map, rivers)
 
                 const len = Math.sqrt(dx*dx+dy*dy);
 
+                const size = Math.round((len * RELATIVE_CITY_SIZE) / 5) * 5;
+                const radius = (SIZE_TO_RADIUS * size)|0;
 
-                const radius = (len * RELATIVE_CITY_RADIUS) | 0;
+                const index = findPosition(points, radius * 3);
 
-                const index = findPosition(points, radius);
-
-                const {px, py} = findNonRiverTile(map, points[index], points[index + 1]);
+                const px = points[index];
+                const py = points[index + 1];
 
                 const radiusSquared = radius * radius;
                 let sum = 0;
@@ -969,7 +1081,7 @@ function planCities(map, rivers)
 
                 spring.centerX = (px & map.sizeMask);
                 spring.centerY = (py & map.sizeMask);
-                spring.radius = radius;
+                spring.size = size;
 
                 const limit = MIN_CITY_RATING ;
                 const isLong = sum > limit;
@@ -981,25 +1093,14 @@ function planCities(map, rivers)
             });
 
 
-    longRivers = mergeOverlapping(longRivers);
+    cities = mergeOverlapping(cities);
 
-    for (let j = 0; j < longRivers.length; j++)
+    for (let j = 0; j < cities.length; j++)
     {
-        const {centerX, centerY, radius} = longRivers[j];
-
-        const radiusSquared = radius * radius;
-        for (let y = -radius; y <= radius; y++)
-        {
-            const xDelta = Math.round(Math.sqrt(radiusSquared - y * y));
-
-            map.putThing(centerX + xDelta, centerY + y, DOT);
-            map.putThing(centerX - xDelta, centerY + y, DOT);
-        }
-
-        //map.write(centerX, centerY, MARKER)
+        setupCityTiles(map, cities[j]);
     }
 
-    return longRivers;
+    return cities;
 }
 
 
@@ -1679,7 +1780,7 @@ function planRoads(map, cities, updateProgress, percent, start)
 
 
 export default class WorldMap {
-    constructor(size = 800, seed, tiles, things, sensors, navMesh, mask, worldId)
+    constructor(size = 800, seed, tiles, things, navMesh, mask, worldId)
     {
         this.worldId = worldId;
         const sizeBits = Math.log(size) / Math.log(2);
@@ -1704,7 +1805,7 @@ export default class WorldMap {
 
         this.tiles = tiles || new Uint8Array(arrayLen);
         this.things = things || new Uint8Array(arrayLen);
-        this.sensors = sensors || new Map();
+        this.sensors = new Map();
 
         this.navMesh = navMesh || null;
         this.mask = mask || null;
@@ -1747,7 +1848,7 @@ export default class WorldMap {
         const { sizeMask, sizeBits } = this;
         const off = ((y & sizeMask) << sizeBits) + (x & sizeMask);
 
-        //console.log("Register sensor", sensor, " for ", off);
+        console.log("Register sensor", sensor, " for ", off);
         this.sensors.set(off, sensor);
     }
 
@@ -1992,7 +2093,6 @@ export default class WorldMap {
             seed: this.random._seed,
             tiles: this.tiles,
             things: this.things,
-            sensors: this.sensors,
             meshData: {
                 vertices,
                 triangles
@@ -2004,17 +2104,16 @@ export default class WorldMap {
 
     static deserialize(obj)
     {
-        const { worldId, size, seed, things, tiles, sensors, mask, meshData, cities } = obj;
+        const { worldId, size, seed, things, tiles, mask, meshData, cities } = obj;
 
         const map = new WorldMap(
             size,
             seed,
             tiles,
             things,
-            sensors,
             null,
             mask,
-            worldId
+            worldId,
         );
 
         map.navMesh = buildNavigationMesh(map, meshData.vertices, meshData.triangles);

@@ -5850,6 +5850,11 @@ vm-browserify@^1.0.1:
   resolved "https://registry.yarnpkg.com/vm-browserify/-/vm-browserify-1.1.0.tgz#bd76d6a23323e2ca8ffa12028dc04559c75f9019"
   integrity sha512-iq+S7vZJE60yejDYM0ek6zg308+UZsdtPExWP9VZoCFCz1zkJoXFnAX7aZfd/ZwrkidzdUZL0C/ryW+JwAiIGw==
 
+voronoi@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/voronoi/-/voronoi-1.0.0.tgz#c083cafa98c4359a518018bfe88624cb227ac291"
+  integrity sha1-wIPK+pjENZpRgBi/6IYkyyJ6wpE=
+
 warning@^4.0.2:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/warning/-/warning-4.0.3.tgz#16e9e077eb8a86d6af7d64aa1e05fd85b4678ca3"

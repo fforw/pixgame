@@ -23,14 +23,19 @@ export default function Sensor(mode, action, ctx = {}, options)
             throw new Error("Invalid mode: " + mode)
         }
 
-        if (typeof action !== "function")
-        {
-            throw new Error("Need sensor action: got " + action)
-        }
+        // if (typeof action !== "function")
+        // {
+        //     throw new Error("Need sensor action: got " + action)
+        // }
     }
 
     this.mode = mode;
     this.action = action;
     this.ctx = ctx;
     this.options = options;
+}
+
+export function SensorPlaceholder(ctx)
+{
+    this.ctx = ctx;
 }
