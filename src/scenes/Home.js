@@ -75,7 +75,7 @@ class Home extends Scene {
             topY + lastY,
             WALL
         );
-        
+
         map.putThing(
             topX + w,
             topY + lastY,
@@ -158,6 +158,8 @@ class Home extends Scene {
             ctx.posX = (fridgeX - 2) * 16;
             ctx.posY = (fridgeY) * 16 - 4;
         }
+
+        console.log("Home initialized", ctx);
     }
 
     onExit()

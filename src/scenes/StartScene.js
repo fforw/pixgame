@@ -4,8 +4,9 @@ import Services from "../workers/Services";
 import WorldScene from "./WorldScene";
 import { drawDigit } from "../util/drawDigit";
 import drawTiles from "../drawTiles";
-import { CASTLE_GATE, DOT, EMPTY } from "../tilemap-config";
+import { BLOCKED, CASTLE_GATE, DOT, EMPTY } from "../tilemap-config";
 import Sensor, { SensorMode, SensorPlaceholder } from "../sensor";
+import City from "./City";
 
 
 function enterCastle(ctx, x, y)
@@ -22,7 +23,7 @@ function registerTileSensors(map, ctx)
     {
         const city = cities[i];
 
-        const { centerX, centerY, size, topWall, bottomWall } = city;
+        const { centerX, centerY, size } = city;
 
         const px = centerX - (size >> 1);
         const py = centerY - (size >> 1);
@@ -32,42 +33,58 @@ function registerTileSensors(map, ctx)
 
         const citySensor = new Sensor(
             SensorMode.MOTION,
-            (x,y) => console.log("CITY", x, y),
+            (x,y) => ctx.graph.goto(
+                City,
+                {
+                    x,
+                    y,
+                    city
+                }
+            ),
             ctx,
         );
 
-        for (let i = 0; i < topWall.length; i++)
+        for (let i = 0; i < city.topWall.length; i++)
         {
-            const thing = topWall[i];
+            const thing = city.topWall[i];
             if (thing === CASTLE_GATE)
             {
-                console.log("North gate at index ", i);
-                map.registerSensor(px + i * 5 - 1, py + height - 2, citySensor);
-                map.registerSensor(px + i * 5    , py + height - 2, citySensor);
-                map.registerSensor(px + i * 5 + 1, py + height - 2, citySensor);
-                map.putThing(px + i * 5 - 1, py + height - 2, DOT);
-                map.putThing(px + i * 5    , py + height - 2, DOT);
-                map.putThing(px + i * 5 + 1, py + height - 2, DOT);
-                break;
-            }
-        }
-
-        for (let i = 0; i < bottomWall.length; i++)
-        {
-            const thing = bottomWall[i];
-            if (thing === CASTLE_GATE)
-            {
-                console.log("South gate at index ", i);
+                //console.log("North gate at index ", i);
 
                 map.registerSensor(px + i * 5 - 1, py - 1, citySensor);
                 map.registerSensor(px + i * 5    , py - 1, citySensor);
                 map.registerSensor(px + i * 5 + 1, py - 1, citySensor);
 
-                map.putThing(px + i * 5 - 1, py - 1, DOT);
-                map.putThing(px + i * 5    , py - 1, DOT);
-                map.putThing(px + i * 5 + 1, py - 1, DOT);
+                map.putThing(px + i * 5 - 3, py - 1, BLOCKED);
+                map.putThing(px + i * 5 - 2, py - 1, BLOCKED);
+                map.putThing(px + i * 5 - 1, py - 1, EMPTY);
+                map.putThing(px + i * 5    , py - 1, EMPTY);
+                map.putThing(px + i * 5 + 1, py - 1, EMPTY);
+                map.putThing(px + i * 5 + 2, py - 1, BLOCKED);
+                map.putThing(px + i * 5 + 3, py - 1, BLOCKED);
 
 
+                break;
+            }
+        }
+
+        for (let i = 0; i < city.bottomWall.length; i++)
+        {
+            const thing = city.bottomWall[i];
+            if (thing === CASTLE_GATE)
+            {
+                //console.log("South gate at index ", i);
+
+                map.registerSensor(px + i * 5 - 1, py + height - 2, citySensor);
+                map.registerSensor(px + i * 5    , py + height - 2, citySensor);
+                map.registerSensor(px + i * 5 + 1, py + height - 2, citySensor);
+                map.putThing(px + i * 5 - 3, py + height - 2, BLOCKED);
+                map.putThing(px + i * 5 - 2, py + height - 2, BLOCKED);
+                map.putThing(px + i * 5 - 1, py + height - 2, EMPTY);
+                map.putThing(px + i * 5    , py + height - 2, EMPTY);
+                map.putThing(px + i * 5 + 1, py + height - 2, EMPTY);
+                map.putThing(px + i * 5 + 2, py + height - 2, BLOCKED);
+                map.putThing(px + i * 5 + 3, py + height - 2, BLOCKED);
                 break;
             }
         }

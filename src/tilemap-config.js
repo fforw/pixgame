@@ -196,7 +196,7 @@ export const THING_TEXTURES = [
     null, //"marker2.png",
     "wall-end.png",
     "castle-gate.png",
-    "marker.png",
+    null, // "marker.png",
     null,
     "large-tree.png",
     "large-tree2.png",

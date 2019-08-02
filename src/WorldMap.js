@@ -26,7 +26,7 @@ import {
     DARK,
     DIRT,
     EMPTY,
-    GRASS,
+    GRASS, HOUSE1, HOUSE3,
     ICE,
     ICE2,
     LARGE_TREE,
@@ -49,6 +49,7 @@ import {
     WOODS2
 } from "./tilemap-config";
 import Sensor, { SensorMode, SensorPlaceholder } from "./sensor";
+import drawCityWalls from "./util/drawCityWalls";
 
 
 export const TAU = Math.PI * 2;
@@ -992,6 +993,8 @@ function getWallThings(map, sx, sy, size)
 }
 
 
+
+
 function setupCityTiles(map, city)
 {
     const { centerX, centerY, size } = city;
@@ -1010,36 +1013,37 @@ function setupCityTiles(map, city)
     city.topWall = topWall;
     city.bottomWall = bottomWall;
 
-    for (let i = 0; i < topWall.length; i++)
-    {
-        const thing = topWall[i];
-        const restTile = thing === CASTLE_GATE ? EMPTY : BLOCKED;
-        for (let j = 0; j < 5; j++)
-        {
-            map.putThing(px + i * 5 + j - 2, py, j === 2 ? thing : restTile);
-        }
-    }
-
-    for (let i = 0; i < bottomWall.length; i++)
-    {
-        const thing = bottomWall[i];
-        const restTile = thing === CASTLE_GATE ? EMPTY : BLOCKED;
-        for (let j = 0; j < 5; j++)
-        {
-            map.putThing(px + i * 5 + j - 2, py + height - 1, j === 2 ? thing : restTile);
-        }
-    }
-
-    for (let y = 1; y < height - 1; y += 2)
-    {
-        map.putThing(px, py + y, CASTLE_VERTICAL);
-        map.putThing(px, py + y + 1, BLOCKED);
-
-        map.putThing(px + size - 1, py + y, CASTLE_VERTICAL);
-        map.putThing(px + size - 1, py + y + 1, BLOCKED);
-    }
+    drawCityWalls(map, px, py, topWall, bottomWall, size);
 
     fillThings(map, px + 1, py + 1, width - 2, height - 2, BLOCKED)
+
+    let flag = false;
+    for (let y = 8 ; y < height - 4; y += 3)
+    {
+        const house = map.random.nextInt(HOUSE1, HOUSE3);
+
+        let x;
+        if (flag)
+        {
+            x = 10;
+            do
+            {
+                map.putThing(px + x, py + y, house);
+                x += 15;
+            } while (x  < width - 6);
+        }
+        else
+        {
+            x = width - 6;
+            do
+            {
+                map.putThing(px + x, py + y, house);
+                x -= 15;
+            } while (x  > 10);
+        }
+        flag = !flag;
+    }
+
 }
 
 

@@ -16,6 +16,7 @@ import { Modal, ModalBody, ModalHeader } from "reactstrap"
 import { SensorMode } from "./sensor";
 import { BLOCKED, HOUSE, IGLOO, RIVER, SAND } from "./tilemap-config";
 import Home from "./scenes/Home";
+import City from "./scenes/City";
 
 
 function determineScale(width)
@@ -454,7 +455,8 @@ function setup(loader, resources)
     const sceneGraph = new SceneGraph([
         StartScene,
         WorldScene,
-        Home
+        Home,
+        City
     ], ctx);
 
     app.ticker.add((delta) => {

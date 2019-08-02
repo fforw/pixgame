@@ -1,6 +1,8 @@
 
 import assert from "power-assert";
+import Prando from "prando";
 import simplify, { perpendicularDistance } from "../src/util/simplify";
+import generate from "../src/util/name-generator";
 
 describe("simplify", function(){
     describe("perpendicularDistance()", function(){
@@ -151,5 +153,15 @@ describe("simplify", function(){
         console.log(direction(-1,0));
         console.log(direction(0,-1));
         console.log(direction(-1,-1));
+    })
+
+	it("names", () => {
+
+	    const random = new Prando("test-test");
+
+	    for (let i=0; i < 10; i++)
+        {
+	        console.log(generate(random, random.nextInt(4, 8)));
+        }
     })
 });
