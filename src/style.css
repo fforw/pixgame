@@ -22,3 +22,51 @@ body.interaction canvas
 {
     cursor: pointer !important;
 }
+
+.info-container
+{
+    z-index: 2000;
+    position: absolute;
+    bottom: 0;
+    max-height: 100vh;
+    overflow: auto;
+}
+
+.info-box
+{
+    background: rgba(0,0,0,0.7);
+}
+
+
+.stats-bar
+{
+    width: 100%;
+}
+
+.stats-bar .stats
+{
+    background-color: #d66941;
+}
+
+.stats-bar .stats.health
+{
+    background-color: #3ea930;
+}
+
+.dice-stat
+{
+    font-weight: bold;
+    font-style: italic;
+}
+
+.dice-op
+{
+    font-weight: bold;
+}
+
+.dice-value
+{
+    font-weight: bold;
+    color: #bab;
+}
+

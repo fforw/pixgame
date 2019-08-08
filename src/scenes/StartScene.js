@@ -1,12 +1,30 @@
 import { Scene } from "../SceneGraph";
-import WorldMap from "../WorldMap";
+import WorldMap, { fillThings, fillTiles, TAU } from "../WorldMap";
 import Services from "../workers/Services";
-import WorldScene from "./WorldScene";
+import WorldScene, { START_X, START_Y } from "./WorldScene";
 import { drawDigit } from "../util/drawDigit";
 import drawTiles from "../drawTiles";
-import { BLOCKED, CASTLE_GATE, DOT, EMPTY } from "../tilemap-config";
+import {
+    BLOCKED,
+    CASTLE_GATE,
+    DARK,
+    DOT,
+    EMPTY,
+    GRASS,
+    ITEM_AXE,
+    ITEM_HOE,
+    ITEM_PICKAXE,
+    ITEM_SHOVEL, ITEM_SWORD, ITEM_WOOD,
+    SAND
+} from "../config";
 import Sensor, { SensorMode, SensorPlaceholder } from "../sensor";
 import City from "./City";
+import Meeple, { GUILDS, GUILD_UNIFORMS, SECONDARY_STAT } from "../Meeple";
+import Prando from "prando";
+import now from "performance-now";
+import { renderReact } from "../index";
+import wait from "../util/wait";
+import { GUILD_OF_ARES, GUILD_OF_ATHENA, GUILD_OF_DEMETER } from "../skill-tree";
 
 
 function enterCastle(ctx, x, y)
@@ -96,6 +114,85 @@ function registerTileSensors(map, ctx)
 }
 
 
+function createMeeple(random, x, y, ctx, targets, count)
+{
+    const meeple = new Meeple(
+        random,
+        x,
+        y,
+        ctx
+    );
+
+    // wait(random.nextInt(count * 100))
+    //     .then(() => {
+    //
+    //         for (let name of GUILDS.keys())
+    //         {
+    //             if (meeple.skills.has(name))
+    //             {
+    //                 const target = targets[name];
+    //                 let targetX;
+    //                 let targetY;
+    //                 do
+    //                 {
+    //                     targetX = target[0] + random.nextInt(-80, 80);
+    //                     targetY = target[1] + random.nextInt(-80, 80);
+    //                 } while(ctx.map.getThing(targetX >> 4, targetY >> 4) >= BLOCKED);
+    //
+    //                 meeple.moveTo(
+    //                     targetX,
+    //                     targetY
+    //                 );
+    //                 return;
+    //             }
+    //         }
+    //         const target = targets.none;
+    //         let targetX;
+    //         let targetY;
+    //         do
+    //         {
+    //             targetX = target[0] + random.nextInt(-50, 50);
+    //             targetY = target[1] + random.nextInt(-50, 50);
+    //         } while(ctx.map.getThing(targetX >> 4, targetY >> 4) >= BLOCKED);
+    //
+    //         meeple.moveTo(
+    //             targetX,
+    //             targetY
+    //         );
+    //
+    //     });
+
+    return meeple;
+}
+
+
+function arrangeInSquare(meeples, cx, cy)
+{
+    const size = Math.ceil(Math.sqrt(meeples.length));
+
+    cx -= size * 24;
+    cy -= size * 24;
+
+    let off = 0;
+    for (let y = 0; y < size ; y++)
+    {
+        for (let x = 0; x < size; x++)
+        {
+            if (off < meeples.length)
+            {
+                meeples[off].x = cx + x * 48;
+                meeples[off].y = cy + y * 48;
+                off++;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+}
+
+
 class StartScene extends Scene
 {
     constructor(ctx, input, parent)
@@ -125,9 +222,150 @@ class StartScene extends Scene
         }).then(
             generatedMap => {
 
+                this.ctx.worldMap = generatedMap;
+                this.ctx.map = generatedMap;
+
                 registerTileSensors(generatedMap, this.ctx);
 
-                this.ctx.worldMap = generatedMap;
+                const posX = 1225;
+                const posY = 955;
+
+                const random = new Prando();
+
+                const groupSize = 8 * 3;
+
+                fillTiles(generatedMap, posX - 4, posY - 4, groupSize + 8, groupSize + 8, GRASS);
+                fillThings(generatedMap, posX - 40, posY - 40, groupSize + 80, groupSize + 80, 0);
+
+
+                const cx = (posX + (groupSize >> 1)) << 4;
+                const cy = (posY + (groupSize >> 1)) << 4;
+
+                const radius = 20 * 16;
+
+                const targets = {
+                    [GUILD_OF_ARES] : [
+                        cx + Math.sin(0) * radius|0,
+                        cy + Math.cos(0) * radius|0,
+                    ],
+                    [GUILD_OF_DEMETER] : [
+                        cx + Math.sin(TAU / 3) * radius|0,
+                        cy + Math.cos(TAU / 3) * radius|0,
+                    ],
+                    [GUILD_OF_ATHENA] : [
+                        cx + Math.sin(-TAU / 3) * radius|0,
+                        cy + Math.cos(-TAU / 3) * radius|0,
+                    ],
+                    none : [
+                        cx,
+                        cy
+                    ],
+
+                };
+
+                const { mobiles } = this.ctx;
+
+                let count = 0;
+                for (let y = 0; y < 8; y++)
+                {
+                    for (let x = 0; x < 8; x++)
+                    {
+                        mobiles.push(
+                            createMeeple(
+                                random,
+                            posX * 16 + x * 48,
+                            posY * 16 + y * 48,
+                                this.ctx,
+                                targets,
+                                count++
+                            )
+                        );
+
+                        // generatedMap.write(
+                        //     posX + x * 3,
+                        //     posY + y * 3,
+                        //     SAND
+                        // );
+                    }
+                }
+
+                const council = [];
+
+                let t = 0;
+                for (let [name , stat] of GUILDS.entries())
+                {
+                    const meeplesInGuild = mobiles.filter(m => m.skills.has(name));
+
+                    meeplesInGuild.sort((a,b) => {
+
+                        const { stats : statsA } = a;
+                        const { stats : statsB } = b;
+
+                        const vA = statsA[stat] * 3 + statsA[SECONDARY_STAT.get(stat)] + (statsA.cha >> 1);
+                        const vB = statsB[stat] * 3 + statsB[SECONDARY_STAT.get(stat)] + (statsB.cha >> 1);
+
+                        return vB - vA;
+                    });
+
+                    meeplesInGuild[0].uniform = GUILD_UNIFORMS.get(name);
+                    if (name === GUILD_OF_ARES)
+                    {
+                        meeplesInGuild[0].item = ITEM_SWORD;
+                    }
+
+                    council.push(meeplesInGuild[0]);
+
+                    arrangeInSquare(meeplesInGuild, targets[name][0], targets[name][1])
+
+                    console.log(name, ": ", meeplesInGuild.length, ", leader: ", meeplesInGuild[0].name);
+                }
+
+                const meeplesWithoutGuild = mobiles.filter(m => !m.skills.has(GUILD_OF_ATHENA) && !m.skills.has(GUILD_OF_DEMETER) && !m.skills.has(GUILD_OF_ARES));
+                meeplesWithoutGuild.sort((a,b) => {
+
+                    const { stats : statsA } = a;
+                    const { stats : statsB } = b;
+
+                    const vA = Math.max(statsA.str, statsA.dex, statsA.int) * 2 + (statsA.cha >> 1);
+                    const vB = Math.max(statsB.str, statsB.dex, statsB.int) * 2 + (statsB.cha >> 1);
+                    return vB - vA;
+                });
+
+                arrangeInSquare(meeplesWithoutGuild, targets.none[0], targets.none[1])
+                t++;
+
+                console.log("No guild: ", meeplesWithoutGuild.length, "leader: ", meeplesWithoutGuild[0].name);
+
+                meeplesWithoutGuild[0].uniform = GUILD_UNIFORMS.get(null);
+                council.push(meeplesWithoutGuild[0]);
+
+                council.sort((a,b) => {
+                    return b.stats.cha - a.stats.cha;
+                });
+
+                console.log("Council: " + council.map(m => m.name));
+
+
+                mobiles[0].item = ITEM_AXE;
+                mobiles[1].item = ITEM_PICKAXE;
+                mobiles[2].item = ITEM_SHOVEL;
+                mobiles[3].item = ITEM_HOE;
+
+                generatedMap.putItems(posX - 3, posY - 3, ITEM_WOOD, 200);
+                generatedMap.putItems(posX - 3, posY - 1, ITEM_PICKAXE, 10);
+
+                //console.log("NAMES",mobiles.map(mob => mob.name).join(", "));
+
+
+
+
+                //generatedMap.tiles[0] = DARK;
+
+
+                generatedMap.update();
+
+                renderReact();
+
                 this.ctx.graph.goto(WorldScene);
             }
         );
@@ -140,7 +378,7 @@ class StartScene extends Scene
             this.map,
             0,
             0,
-            false
+            []
         );
 
     }

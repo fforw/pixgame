@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="7mm"
+   height="5mm"
+   viewBox="0 0 7 5"
+   version="1.1"
+   id="svg2871"
+   sodipodi:docname="meepe-hair-black.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <defs
+     id="defs2865" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="22.4"
+     inkscape:cx="13.361042"
+     inkscape:cy="7.250139"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1025"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     showguides="false"
+     inkscape:snap-global="false" />
+  <metadata
+     id="metadata2868">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-292)">
+    <path
+       style="fill:#190c27;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.04445707px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 3.0927768,292.35476 c -0.3060283,0.061 0.050646,0.18556 -0.3015627,0.28777 -0.2913029,0.11846 -0.7244182,-0.0946 -0.9369521,0.0259 -0.2125338,0.12044 0.2971064,0.37198 -0.4029475,0.5513 -0.2654518,0.14946 -0.4012401,0.45913 -0.62772219,0.62748 -0.30401175,0.13878 -0.029646,0.28045 -0.2254334,0.76064 -0.10053628,0.26392 -0.17983949,0.56262 -0.0670406,0.83609 0.0720367,0.342 0.13544179,0.72524 0.40399529,0.97343 0.254591,0.19548 0.4173335,-0.14195 0.3092708,-0.3522 0.04465,-0.41912 0.2987772,-0.77294 0.49606,-1.13253 0.1556835,-0.22702 0.4214239,-0.38469 0.6846823,-0.41922 0.2027988,0.14489 0.4563622,0.38602 0.4080828,0.0431 0.153558,-0.30119 0.4731957,0.0169 0.6048801,0.17784 0.073616,0.11444 0.4912077,0.41984 0.2853873,0.0302 -0.022217,-0.3406 0.3734043,-0.35334 0.4917072,-0.0804 0.1246513,0.25082 0.3856336,0.51987 0.6254536,0.15269 0.361873,-0.11467 0.5283501,0.35724 0.7625826,0.54489 0.1640408,0.27229 0.3711091,0.54696 0.2829787,0.87487 -0.063469,0.33863 0.3877604,0.55361 0.5993368,0.28143 0.1960036,-0.26286 0.095423,-0.61144 0.1030068,-0.91463 -0.014959,-0.30883 -0.07102,-0.61603 -0.169663,-0.90837 -0.04932,-0.14617 -0.1092877,-0.28862 -0.1800844,-0.42572 -0.070796,-0.1371 -0.175491,-0.19393 -0.1754552,-0.37366 3.57e-5,-0.17973 0.090116,-0.36907 -0.1079442,-0.45654 -0.1980605,-0.0874 -0.6051646,-0.12178 -0.4921764,-0.44587 0.027687,-0.13562 0.067762,-0.48367 -0.131132,-0.27829 -0.2369529,0.14653 -0.5739108,0.24888 -0.7635803,-0.0346 -0.135047,-0.0946 -0.036561,-0.13716 -0.2838463,-0.27137 -0.247286,-0.13421 -0.2555873,0.26039 -0.55874,0.13376 -0.5258927,0.0551 -0.3271157,-0.26889 -0.633144,-0.20787 z"
+       id="path854-1"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="zczcccccccccccccccccsszzccczcz" />
+  </g>
+</svg>

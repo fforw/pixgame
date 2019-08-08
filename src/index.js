@@ -5,7 +5,7 @@ import ReactDOM from "react-dom"
 // noinspection ES6UnusedImports
 import STYLES from "./style.css"
 import SceneGraph from "./SceneGraph";
-import WorldScene, { START_X, START_Y } from "./scenes/WorldScene"
+import WorldScene from "./scenes/WorldScene"
 import StartScene from "./scenes/StartScene"
 import logger from "./util/logger";
 import { getCurrentLayerMask } from "./drawTiles"
@@ -13,10 +13,11 @@ import CanvasWrapper from "./CanvasWrapper"
 import MapWidget from "./MapWidget"
 
 import { Modal, ModalBody, ModalHeader } from "reactstrap"
-import { SensorMode } from "./sensor";
-import { BLOCKED, HOUSE, IGLOO, RIVER, SAND } from "./tilemap-config";
 import Home from "./scenes/Home";
 import City from "./scenes/City";
+import InfoBox from "./InfoBox";
+import Services from "./workers/Services";
+import { DARK } from "./config";
 
 
 function determineScale(width)
@@ -60,8 +61,14 @@ let showMap = false;
 // export const POS_Y = 365 * 16;
 // export const POS_X = 1184 * 16;
 // export const POS_Y = 1090 * 16;
-export const POS_X = 1151 * 16;
-export const POS_Y = 856 * 16;
+// export const POS_X = 1151 * 16;
+// export const POS_Y = 856 * 16;
+// export const POS_X = 0;
+// export const POS_Y = 0;
+
+
+export const POS_X = 1225 * 16;
+export const POS_Y = 955 * 16;
 
 const ACCELERATION = 0.9;
 const SPEED_LIMIT = 15;
@@ -125,7 +132,12 @@ const ctx = {
     },
 
     maxFrameWidth: 0,
-    maxFrameHeight: 0
+    maxFrameHeight: 0,
+
+    mobiles: [],
+    selectedMob: -1,
+
+    services: Services
 
 };
 
@@ -148,7 +160,8 @@ function handleMovement(delta)
 
         const tile = map.read(tx,ty);
 
-        const speedLimit = SPEED_LIMIT * (tile === RIVER ? 0.15 : tile === SAND ? 0.4: 1);
+        //const speedLimit = SPEED_LIMIT * (tile === RIVER ? 0.15 : tile === SAND ? 0.4: 1);
+        const speedLimit = SPEED_LIMIT;
         if (moveLeftRight)
         {
             ctx.dx += moveLeftRight *  ACCELERATION;
@@ -188,74 +201,74 @@ function handleMovement(delta)
         }
 
 
-        let canMove;
-        let thing;
-        let attempts = 0;
+        let canMove = true;
         let x,y;
-        do
-        {
+        // let thing;
+        // let attempts = 0;
+        // do
+        // {
             x = (posX + ctx.dx * delta) & map.fineMask;
             y = (posY + ctx.dy * delta) & map.fineMask;
 
-            const tx = ((x + 33) >> 4) & map.sizeMask;
-            const ty = ((y + 28) >> 4) & map.sizeMask;
-
-            thing = map.getThing(tx,ty);
-
-            canMove = thing < BLOCKED || thing === HOUSE || thing === IGLOO;
-            attempts++;
-
-            if(!canMove)
-            {
-                ctx.dx *= 0.5;
-                ctx.dy *= 0.5;
-            }
-
-        }  while (!ctx.blocked && !canMove && attempts < 5);
+            // const tx = ((x + 33) >> 4) & map.sizeMask;
+            // const ty = ((y + 28) >> 4) & map.sizeMask;
+        //
+        //     thing = map.getThing(tx,ty);
+        //
+        //     canMove = thing < BLOCKED || thing === HOUSE || thing === IGLOO;
+        //     attempts++;
+        //
+        //     if(!canMove)
+        //     {
+        //         ctx.dx *= 0.5;
+        //         ctx.dy *= 0.5;
+        //     }
+        //
+        // }  while (!ctx.blocked && !canMove && attempts < 5);
 
         if (canMove && !ctx.blocked)
         {
             const { sizeBits } = map;
 
-            const sensor = map.lookupSensor(tx,ty);
-            //sensorLogger(tx + ", " + ty + ", offset = " + ((ty << sizeBits) + tx) + ": " + sensor);
-            if (sensor)
-            {
-                const { fromDirections } = sensor.options;
-
-                const direction = ((sdx > 0) + ((sdy > 0) << 1) + ((sdx < 0) << 2) + ((sdy < 0) << 3));
-
-                if ((fromDirections & direction) !== 0)
-                {
-                    if (sensor.mode === SensorMode.INTERACTION)
-                    {
-                        document.body.className = "interaction";
-                        interactionSensor = sensor;
-                        interactionSensorX = tx;
-                        interactionSensorY = ty;
-
-
-                    }
-                    else
-                    {
-                        document.body.className = null;
-                        interactionSensor = null;
-                        interactionSensorX = 0;
-                        interactionSensorY = 0;
-                    }
-
-                    if (sensor.mode === SensorMode.MOTION)
-                    {
-                        sensor.action(tx,ty);
-                    }
-                }
-            }
-            else
-            {
+            // const sensor = map.lookupSensor(tx,ty);
+            // //sensorLogger(tx + ", " + ty + ", offset = " + ((ty << sizeBits) + tx) + ": " + sensor);
+            // if (sensor)
+            // {
+            //     const { fromDirections } = sensor.options;
+            //
+            //     const direction = ((sdx > 0) + ((sdy > 0) << 1) + ((sdx < 0) << 2) + ((sdy < 0) << 3));
+            //
+            //     if ((fromDirections & direction) !== 0)
+            //     {
+            //         if (sensor.mode === SensorMode.INTERACTION)
+            //         {
+            //             document.body.className = "interaction";
+            //             interactionSensor = sensor;
+            //             interactionSensorX = tx;
+            //             interactionSensorY = ty;
+            //
+            //
+            //         }
+            //         else
+            //         {
+            //             document.body.className = null;
+            //             interactionSensor = null;
+            //             interactionSensorX = 0;
+            //             interactionSensorY = 0;
+            //         }
+            //
+            //         if (sensor.mode === SensorMode.MOTION)
+            //         {
+            //             sensor.action(tx,ty);
+            //         }
+            //     }
+            // }
+            // else
+            // {
                 ctx.posX = x;
                 ctx.posY = y;
                 //movementLogger("FREE ON " + tileNames[tile] + "/" + thingNames[thing] + ": " + tx + ", " + ty);
-            }
+//            }
         }
         else
         {
@@ -299,7 +312,7 @@ function toggleShowMap()
 }
 
 
-function renderReact()
+export function renderReact()
 {
     return new Promise((resolve, reject) => {
         try
@@ -318,9 +331,6 @@ function renderReact()
                         <ModalHeader toggle={ togglePause }>
                             PAUSED
                         </ModalHeader>
-                        <ModalBody>
-                            Game paused
-                        </ModalBody>
                     </Modal>
                     <Modal
                         isOpen={ showMap }
@@ -355,6 +365,7 @@ function renderReact()
                             />
                         </ModalBody>
                     </Modal>
+                    <InfoBox mob={ ctx.selectedMob >= 0 && ctx.mobiles[ctx.selectedMob] }/>
                 </React.Fragment>,
                 document.getElementById("root"),
                 resolve
@@ -398,6 +409,24 @@ function findFrameMaximum(atlas)
     console.log("Frame maximums:", maxW, maxH);
 
     return [ maxW, maxH  ];
+}
+
+
+function isInUI(ev)
+{
+    let elem = ev.target;
+
+    while (elem.id !== "root")
+    {
+        //console.log("isInUI", elem);
+        
+        if (elem.className.indexOf("ui-elem") >= 0)
+        {
+            return true;
+        }
+        elem = elem.parentNode;
+    }
+    return false;
 }
 
 
@@ -473,12 +502,39 @@ function setup(loader, resources)
 
         switch(keyCode)
         {
+            case 188:
+                ctx.selectedMob--;
+                if (ctx.selectedMob < 0)
+                {
+                    ctx.selectedMob = ctx.mobiles.length - 1;
+                }
+
+                console.log("selectedMob", ctx.selectedMob);
+                
+                ctx.posX = ctx.mobiles[ctx.selectedMob].x;
+                ctx.posY = ctx.mobiles[ctx.selectedMob].y;
+
+                renderReact();
+                break;
+            case 190:
+                ctx.selectedMob++;
+                if (ctx.selectedMob >= ctx.mobiles.length || ctx.selectedMob < 0)
+                {
+                    ctx.selectedMob = 0;
+                }
+
+                console.log("selectedMob", ctx.selectedMob);
+
+                ctx.posX = ctx.mobiles[ctx.selectedMob].x;
+                ctx.posY = ctx.mobiles[ctx.selectedMob].y;
+                renderReact();
+                break;
 
             case 13:
-                if (interactionSensor)
-                {
-                    interactionSensor.action(interactionSensorX, interactionSensorY);
-                }
+                // if (interactionSensor)
+                // {
+                //     interactionSensor.action(interactionSensorX, interactionSensorY);
+                // }
                 break;
             case 49:
                 ctx.scale = determineScale(Math.max(window.innerWidth, window.innerHeight));
@@ -495,7 +551,16 @@ function setup(loader, resources)
             case 27:
             case 80:
                 console.log("POS", (ctx.posX >> 4)|0, (ctx.posY >> 4)|0, ", fine = ", ctx.posX, ctx.posY, ", layerMask = ", getCurrentLayerMask())
-                togglePause();
+
+                if (ctx.selectedMob >= 0)
+                {
+                    ctx.selectedMob = -1;
+                    renderReact();
+                }
+                else
+                {
+                    togglePause();
+                }
                 break;
             case 36:
                 ctx.posX = POS_X;
@@ -562,19 +627,44 @@ function setup(loader, resources)
 
     let zoomDelta = 0;
 
-    window.addEventListener("click", event => {
+    window.addEventListener("click", ev => {
 
-        if (interactionSensor)
+        if (!ctx.map || isInUI(ev))
         {
-            interactionSensor.action(interactionSensorX, interactionSensorY);
+            return;
+        }
+
+        const rect = ctx.app.view.getBoundingClientRect();
+        const halfWidth = ctx.width >> 1;
+        const halfHeight = ctx.height >> 1;
+        const x = ctx.posX - halfWidth  + (ev.clientX - rect.left)/ctx.scale;
+        const y = ctx.posY - halfHeight + (ev.clientY - rect.top)/ctx.scale;
+
+        // console.log("x: " + mapX + " y: " + mapY, "ev =", x, y);
+        // ctx.map.write(mapX, mapY, DARK);
+        //
+
+        // // if (interactionSensor)
+        // // {
+        // //     interactionSensor.action(interactionSensorX, interactionSensorY);
+        // // }
+        //
+        if (ctx.selectedMob >= 0)
+        {
+            const mobile = ctx.mobiles[ctx.selectedMob];
+            console.log("Move ", mobile.name, " from", mobile.x >> 4, mobile.y >> 4, " to ", x >> 4, y >> 4, "obj = ", mobile);
+            mobile.moveTo(x, y);
+            // ctx.mobiles[ctx.selectedMob + 1].moveTo(x,y);
+            // ctx.mobiles[ctx.selectedMob + 2].moveTo(x,y);
         }
 
     }, true);
+    
     window.addEventListener("wheel", event => {
 
         const deltaY = Math.sign(event.deltaY);
         zoomDelta += deltaY * INV_ZOOM_SPEED;
-    });
+    }, true);
 
     sceneGraph.start();
     sceneGraph.render();

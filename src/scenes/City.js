@@ -1,6 +1,6 @@
 import { Scene } from "../SceneGraph";
 import drawTiles from "../drawTiles";
-import { CASTLE_GATE, CASTLE_WALL, thingNames } from "../tilemap-config";
+import { CASTLE_GATE, CASTLE_WALL, thingNames } from "../config";
 import WorldMap from "../WorldMap";
 import drawCityWalls from "../util/drawCityWalls";
 
@@ -155,7 +155,7 @@ class City extends Scene {
             this.ctx.map,
             this.ctx.posX,
             this.ctx.posY,
-            true
+            this.ctx.mobiles
         );
     }
 }

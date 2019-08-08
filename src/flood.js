@@ -1,5 +1,5 @@
 
-import { _RIVER, EMPTY, RIVER, WATER } from "./tilemap-config";
+import { _RIVER, EMPTY, RIVER, WATER } from "./config";
 
 export default function flood(map, x, y, width)
 {

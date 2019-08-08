@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="30"
+   height="21"
+   viewBox="0 0 7.9374998 5.5562512"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="meeple-outline.svg"
+   inkscape:export-filename="/home/sven/ideaprojects/pixgame/atlas/src/bunny.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#808080"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="11.313708"
+     inkscape:cx="51.713592"
+     inkscape:cy="17.595295"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:measure-start="0,0"
+     inkscape:measure-end="0,0"
+     units="px"
+     inkscape:window-width="1920"
+     inkscape:window-height="1025"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:snap-global="false"
+     showguides="true"
+     inkscape:guide-bbox="true" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-291.44366)">
+    <g
+       id="g2038"
+       transform="translate(-0.11693042,1.2454221)">
+      <path
+         transform="matrix(0.26458333,0,0,0.26458333,0,283.77084)"
+         id="path852"
+         d="m 7.8476562,25.929688 c -3.4863959,2.08585 -5.6659704,5.388993 -5.6699218,9.523437 9.838e-4,3.37806 1.4601763,6.61084 4.0429687,8.957031 2.215991,-1.781023 5.5855949,-2.820812 9.1523439,-2.824218 3.584456,4.33e-4 6.970908,1.047679 9.189453,2.841796 2.60328,-2.343571 4.078788,-5.584471 4.085938,-8.974609 -0.005,-4.032421 -2.077561,-7.275439 -5.414063,-9.367187 -2.302139,1.637482 -4.989538,2.698163 -7.9375,2.880859 -2.809798,0.01454 -5.265165,-1.317529 -7.4492188,-3.037109 z"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#f7fbf5;fill-opacity:0.56349206;fill-rule:evenodd;stroke:none;stroke-width:2.57851839px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         inkscape:connector-curvature="0" />
+      <path
+         id="path900"
+         transform="matrix(0.26458333,0,0,0.26458333,0,283.77084)"
+         d="M 6.9296875,25.162109 C 3.3056618,27.463017 0.89292189,31.004282 0.88867188,35.451172 v 0.002 c 0.001092,3.749065 1.24574332,6.629003 4.08593752,9.208984 2.302046,0.346486 1.3457031,-1.96289 1.3457031,-1.96289 C 4.3774381,40.656299 3.4680992,38.18934 3.4667969,35.455078 v -0.002 C 3.4712072,31.594761 5.5227587,28.60546 8.9726562,26.753906 8.2629699,26.267467 7.5861265,25.726667 6.9296875,25.162109 Z m 17.2714845,0.185547 c -0.68107,0.560237 -1.401936,1.067545 -2.158203,1.513672 3.333601,1.85664 5.311025,4.805292 5.316406,8.591797 -0.0063,2.747112 -0.942953,4.558161 -2.90625,6.601563 -0.628497,0.569363 -1.098019,2.985809 1.242187,2.574218 2.862506,-2.576958 4.234253,-5.411346 4.242188,-9.173828 v -0.002 -0.002 C 29.9322,31.127296 27.658348,27.650669 24.201172,25.347562 Z"
+         style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.57851839px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+</svg>

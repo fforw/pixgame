@@ -7,7 +7,7 @@ import {
     RESPONSE_MAP,
     RESPONSE_PROGRESS,
     RESPONSE_ERROR,
-    RESPONSE_SEGMENT, RESPONSE_PATH
+    RESPONSE_SEGMENT, RESPONSE_PATH, MESSAGE_CANCEL_PATH
 } from "./services-constants";
 import simplify from "../util/simplify";
 
@@ -59,12 +59,16 @@ function doSubPathRoundRobin()
 
     const { sizeMask, sizeBits} = map;
 
+    //console.log("world path", worldPath);
+
     let offset = searchWalkable(map,  worldPath[pos],  worldPath[pos + 1]);
     const sx = offset & sizeMask;
     const sy = (offset >>> sizeBits) & sizeMask ;
     offset = searchWalkable(map,  worldPath[pos + 2],  worldPath[pos + 3]);
     const ex = offset & sizeMask;
     const ey = (offset >>> sizeBits) & sizeMask ;
+
+    //console.log("Corrected local path: ", sx, sy, " to ", ex, ey);
 
     //console.log("Calculate next Path Segment #" + pos + " for ticket #" + ticket, sx, sy, ex, ey);
 
@@ -81,6 +85,8 @@ function doSubPathRoundRobin()
     // XXX: Do not give up, try next
     if (!path)
     {
+        console.log("give up");
+
         reply(
             ticket,
             {
@@ -91,21 +97,25 @@ function doSubPathRoundRobin()
         return;
     }
 
-    path = simplify(path, 0.7);
+    path = simplify(path, 0.1);
+
+
+    const lastSegmentStart = entry.path.length;
     entry.path = entry.path.concat(path);
 
 
     //console.log(entry.path);
 
     entry.pos += 2;
-    if (entry.pos >= worldPath.length - 4)
+    if (entry.pos >= worldPath.length - 2)
     {
         //console.log("Done with ticket #" + ticket);
         reply(
             ticket,
             {
                 type: RESPONSE_PATH,
-                path: entry.path
+                path: entry.path,
+                lastSegmentStart
             }
         );
 
@@ -230,6 +240,10 @@ function handleIncomingMessage(ev)
             break;
         }
 
+        case MESSAGE_CANCEL_PATH:
+            paths.delete(message.ticket);
+            break;
+
         default:
             error(
                 ticket,
@@ -243,12 +257,12 @@ function handleIncomingMessage(ev)
 
 onmessage = ev => {
 
-    try
-    {
+    // try
+    // {
         return handleIncomingMessage(ev);
-    }
-    catch(e)
-    {
-        console.error("Error handling incoming message", e);
-    }
+    // }
+    // catch(e)
+    // {
+    //     console.error("Error handling incoming message", e);
+    // }
 };

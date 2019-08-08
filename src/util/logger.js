@@ -1,7 +1,7 @@
 
-let lastMessage;
 export default function logger(name)
 {
+    let lastMessage;
     return msg => {
 
         if (msg !== lastMessage)

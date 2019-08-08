@@ -2,7 +2,7 @@
 const path = require("path");
 const fs = require("fs");
 
-const configFile = path.join(__dirname, "../src/tilemap-config.js");
+const configFile = path.join(__dirname, "../src/config.js");
 const source = fs.readFileSync(configFile, "UTF-8");
 
 let prevValue = 0;

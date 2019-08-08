@@ -10,7 +10,7 @@ import now from "performance-now";
 import macroPath, { localPath, localPathStep, pointDistance, searchWalkable } from "./navigation";
 
 import raf from "raf"
-import { BLOCKED, thingWalkability } from "./tilemap-config";
+import { BLOCKED, thingWalkability } from "./config";
 
 let drawMask = false;
 

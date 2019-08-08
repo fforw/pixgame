@@ -9,7 +9,7 @@ import Prando from "prando";
 import now from "performance-now";
 import macroPath, { localPath, pointDistance, searchWalkable } from "./navigation";
 import simplify from "./util/simplify";
-import { BLOCKED } from "./tilemap-config";
+import { BLOCKED } from "./config";
 
 // const START_X = 887;
 // const START_Y = 606;
@@ -20,6 +20,16 @@ const START_X = 1438;
 const START_Y = 1690;
 const END_X = 1079;
 const END_Y = 819;
+
+// const START_X = 1424;
+// const START_Y = 1596;
+// const END_X = 1367;
+// const END_Y = 1603;
+
+// const START_X = 1424;
+// const START_Y = 1596;
+// const END_X = 1412;
+// const END_Y = 1674;
 
 let drawMask = false;
 let path, segments;

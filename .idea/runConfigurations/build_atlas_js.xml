@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="build-atlas.js" type="NodeJSConfigurationType" nameIsGenerated="true" path-to-js-file="build-atlas.js" working-dir="$PROJECT_DIR$/tooling">
+    <method v="2" />
+  </configuration>
+</component>

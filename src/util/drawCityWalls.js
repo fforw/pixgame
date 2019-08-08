@@ -1,4 +1,4 @@
-import { BLOCKED, CASTLE_GATE, CASTLE_VERTICAL, EMPTY } from "../tilemap-config";
+import { BLOCKED, CASTLE_GATE, CASTLE_VERTICAL, EMPTY } from "../config";
 
 
 export default function drawCityWalls(map, px, py, topWall, bottomWall, size)

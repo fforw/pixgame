@@ -4,7 +4,18 @@
         "@babel/preset-env"
     ],
     "plugins": [
-        ["@babel/plugin-proposal-class-properties", { "loose": true }],
+        [
+            "@babel/plugin-proposal-class-properties",
+            {
+                "loose": true
+            }
+        ],
+        [
+            "@babel/plugin-transform-template-literals",
+            {
+                "loose": true
+            }
+        ],
         "@babel/plugin-syntax-dynamic-import"
     ],
     "env": {
@@ -17,11 +28,11 @@
             "plugins": [
                 [
                     "transform-imports", {
-                    "reactstrap": {
-                        "transform": "reactstrap/lib/${member}",
-                           "preventFullImport": true
+                        "reactstrap": {
+                            "transform": "reactstrap/lib/${member}",
+                            "preventFullImport": true
+                        }
                     }
-                }
                 ]
             ]
         }

@@ -1,6 +1,6 @@
 import { Scene } from "../SceneGraph";
 import drawTiles from "../drawTiles";
-import { BLOCKED, BOULDER_3, FRIDGE, SAND, TILE_FLOOR, WALL, WALL_END, WALL_FRONT, WALL_TOP } from "../tilemap-config";
+import { BLOCKED, BOULDER_3, FRIDGE, SAND, TILE_FLOOR, WALL, WALL_END, WALL_FRONT, WALL_TOP } from "../config";
 import WorldMap from "../WorldMap";
 import Sensor, { SensorMode } from "../sensor";
 import WorldScene, { HOUSE_X, HOUSE_Y, IGLOO_X, IGLOO_Y } from "./WorldScene";
@@ -183,7 +183,7 @@ class Home extends Scene {
             this.ctx.map,
             this.ctx.posX,
             this.ctx.posY,
-            true
+            this.ctx.mobiles
         );
     }
 }

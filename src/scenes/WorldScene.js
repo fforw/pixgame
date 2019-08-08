@@ -3,8 +3,9 @@ import drawTiles from "../drawTiles";
 import Services from "../workers/Services";
 import { easeInCubic, easeInOutQuint, easeInQuint } from "../util/easing";
 import Sensor, { SensorMode } from "../sensor";
-import { BLOCKED, DIRT, EMPTY, HOUSE, IGLOO, SAND, SMALL_TREE, SOIL, SOIL_2 } from "../tilemap-config";
+import { BLOCKED, DIRT, EMPTY, HOUSE, IGLOO, ITEM_WOOD, SAND, SMALL_TREE, SOIL, SOIL_2 } from "../config";
 import Home from "./Home";
+import { restoreThing } from "../Meeple";
 
 export const HOUSE_X = 1276;
 export const HOUSE_Y = 955;
@@ -139,6 +140,7 @@ class WorldScene extends Scene {
     {
 
         const { path, ctx } = this;
+        const { mobiles } = ctx;
         if(path)
         {
             let { pos, finePos, x, y, dx, dy } = this;
@@ -182,6 +184,32 @@ class WorldScene extends Scene {
 
             this.finePos += this.speed * delta;
         }
+
+        const numberOfMobiles = mobiles.length;
+
+        if (tmpVacated.offsets.length < numberOfMobiles)
+        {
+            tmpVacated.offsets = new Array(numberOfMobiles * 1.5);
+        }
+
+        tmpVacated.count = 0;
+        for (let i = 0; i < numberOfMobiles; i++)
+        {
+            const mobile = mobiles[i];
+
+            if (typeof mobile.ticker === "function")
+            {
+                mobile.ticker(delta, tmpVacated);
+            }
+        }
+
+        // set back vacated things after all mobs have moved.
+        for (let i = 0; i < tmpVacated.count; i += 2)
+        {
+            const x = tmpVacated.offsets[i];
+            const y = tmpVacated.offsets[i + 1];
+            restoreThing(this.ctx.map, x, y)
+        }
     }
 
     render()
@@ -190,11 +218,20 @@ class WorldScene extends Scene {
 
         drawTiles(
             ctx,
-            ctx.worldMap,
+            ctx.map,
             ctx.posX,
-            ctx.posY
+            ctx.posY,
+            ctx.mobiles
         );
     }
 }
+
+const tmpVacated = {
+    offsets: new Array(100),
+    count: 0
+};
+
+const vacated = new Array()
+
 
 export default WorldScene

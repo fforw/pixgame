@@ -2,6 +2,7 @@ import WPWorker from "./_services.worker";
 import WorldMap from "../WorldMap";
 
 import {
+    MESSAGE_CANCEL_PATH,
     QUERY_GENERATE,
     QUERY_PATH,
     RESPONSE_ERROR,
@@ -14,7 +15,7 @@ import {
 
 let counter = 0;
 
-const storage = {};
+const storage = new Map();
 
 const webWorker = WPWorker();
 
@@ -26,7 +27,7 @@ function processWorkerMessage(data)
 
     const { ticket, message } = data;
 
-    const entry = storage[ticket];
+    const entry = storage.get(ticket);
     if (!entry)
     {
         console.error("INVALID TICKET: " + JSON.stringify(message));
@@ -60,13 +61,23 @@ function processWorkerMessage(data)
         }
         case RESPONSE_SEGMENT:
         {
-            entry.onSegment(message.path);
+            if (entry.onSegment(message.path) === false)
+            {
+                resolve({
+                    path: false
+                });
+                
+                webWorker.postMessage({
+                    type: MESSAGE_CANCEL_PATH,
+                    ticket: message.ticket
+                })
+            }
             break;
         }
         case RESPONSE_PATH:
         {
             resolve(
-                message.path
+                message
             );
         }
         case RESPONSE_ERROR:
@@ -116,12 +127,12 @@ function postWithReply(message, ctx)
         // make sure to delete our stored ticket both when resolving and rejecting
         const internal = {
             resolve: result => {
-                delete storage[ticket];
+                storage.delete(ticket);
                 promiseResolve(result);
 
             },
             reject: err => {
-                delete storage[ticket];
+                storage.delete(ticket);
                 promiseReject(err);
 
             }
@@ -137,7 +148,7 @@ function postWithReply(message, ctx)
                 [secret] : internal,
             };
         }
-        storage[ticket] = ctx;
+        storage.set(ticket, ctx);
     }));
 }
 

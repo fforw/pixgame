@@ -3,6 +3,8 @@ import assert from "power-assert";
 import Prando from "prando";
 import simplify, { perpendicularDistance } from "../src/util/simplify";
 import generate from "../src/util/name-generator";
+import Meeple from "../src/Meeple";
+import { isInView } from "../src/drawTiles";
 
 describe("simplify", function(){
     describe("perpendicularDistance()", function(){
@@ -159,9 +161,31 @@ describe("simplify", function(){
 
 	    const random = new Prando("test-test");
 
-	    for (let i=0; i < 10; i++)
+	    for (let i=0; i < 49; i++)
         {
-	        console.log(generate(random, random.nextInt(4, 8)));
+            const meeple = new Meeple(random, 0, 0);
+            console.log(meeple);
         }
+    })
+
+	it("isInView", () => {
+
+	    const sizeMask = 2047;
+
+	    const checkBox = (x,y,w,h) => {
+
+            assert( isInView( x + 50, y + 50,  x, y, w, h, sizeMask))
+            assert(!isInView( x + 150,y + 50,  x, y, w, h, sizeMask))
+            assert(!isInView( x + 50, y + 150, x, y, w, h, sizeMask))
+            assert(!isInView( x + -50,y + 50,  x, y, w, h, sizeMask))
+            assert(!isInView( x + 50, y + -50, x, y, w, h, sizeMask))
+        }
+
+        checkBox(0,0,100, 100);
+        checkBox(-50 & sizeMask, 0, 100, 100);
+        checkBox(0, -50 & sizeMask, 100, 100);
+        checkBox(-50 & sizeMask, -50 & sizeMask, 100, 100);
+
+
     })
 });

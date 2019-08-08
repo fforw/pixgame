@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="fix-tilemap-constants.js" type="NodeJSConfigurationType" nameIsGenerated="true" path-to-js-file="fix-tilemap-constants.js" working-dir="$PROJECT_DIR$/tooling">
+    <method v="2" />
+  </configuration>
+</component>

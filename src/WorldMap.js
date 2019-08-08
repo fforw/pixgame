@@ -22,11 +22,11 @@ import {
     CASTLE_CORNER2,
     CASTLE_GATE,
     CASTLE_RIVER, CASTLE_VERTICAL,
-    CASTLE_WALL,
+    CASTLE_WALL, CITY_HOUSE1, CITY_HOUSE4,
     DARK,
     DIRT,
     EMPTY,
-    GRASS, HOUSE1, HOUSE3,
+    GRASS, HOUSE1, HOUSE3, HOUSE4,
     ICE,
     ICE2,
     LARGE_TREE,
@@ -47,7 +47,7 @@ import {
     WOOD,
     WOODS,
     WOODS2
-} from "./tilemap-config";
+} from "./config";
 import Sensor, { SensorMode, SensorPlaceholder } from "./sensor";
 import drawCityWalls from "./util/drawCityWalls";
 
@@ -60,7 +60,7 @@ const N3 = 20;
 const N4 = 5;
 
 const RELATIVE_CITY_SIZE = 0.2;
-const MIN_CITY_RATING = 700;
+const MIN_CITY_RATING = 500;
 
 
 function clamp(v)
@@ -71,8 +71,8 @@ function clamp(v)
 const SERIALIZED_MAP = "Map serialization";
 
 const WATER_LINE = 0.05;
-const BEACH_LINE = 0.07;
-const WOODS_LINE = 0.09;
+const BEACH_LINE = 0.065;
+const WOODS_LINE = 0.095;
 const MOUNTAIN_LINE = 0.5;
 
 
@@ -914,7 +914,7 @@ function findPosition(points, radius)
 const  SIZE_TO_RADIUS = 0.5 * Math.sqrt(2);
 
 
-function fillThings(map, sx, sy, w, h, thing)
+export function fillThings(map, sx, sy, w, h, thing)
 {
     for ( let y = 0; y < h; y++)
     {
@@ -925,7 +925,7 @@ function fillThings(map, sx, sy, w, h, thing)
     }
 }
 
-function fillTilesFn(map, sx, sy, w, h, tileFn)
+export function fillTilesFn(map, sx, sy, w, h, tileFn)
 {
     const { size, sizeBits } = map;
 
@@ -942,6 +942,24 @@ function fillTilesFn(map, sx, sy, w, h, tileFn)
             //console.log("tileFn(" , tileNames[map.tiles[off]] , ") => " + tileNames[result]);
 
             map.tiles[off] = result;
+        }
+        line +=  size;
+    }
+}
+
+export function fillTiles(map, sx, sy, w, h, tile)
+{
+    const { size, sizeBits } = map;
+
+    //console.log("fillTilesFn", {sx, sy, w, h});
+
+    let line = sy << sizeBits;
+    for ( let y = 0; y < h; y++)
+    {
+        for ( let x = 0; x < w; x++)
+        {
+            const off = line + sx + x;
+            map.tiles[off] = tile;
         }
         line +=  size;
     }
@@ -1015,31 +1033,32 @@ function setupCityTiles(map, city)
 
     drawCityWalls(map, px, py, topWall, bottomWall, size);
 
-    fillThings(map, px + 1, py + 1, width - 2, height - 2, BLOCKED)
+    fillThings(map, px + 1, py + 1, width - 2, height - 2, BLOCKED);
 
     let flag = false;
-    for (let y = 8 ; y < height - 4; y += 3)
+    for (let y = 4 ; y < height - 7; y += 4)
     {
-        const house = map.random.nextInt(HOUSE1, HOUSE3);
 
         let x;
         if (flag)
         {
-            x = 10;
+            x = 5;
             do
             {
+                const house = map.random.nextInt(CITY_HOUSE1, CITY_HOUSE4);
                 map.putThing(px + x, py + y, house);
-                x += 15;
-            } while (x  < width - 6);
+                x += house === CITY_HOUSE4 ? 5 : 8;
+            } while (x  < width - 5);
         }
         else
         {
             x = width - 6;
             do
             {
+                const house = map.random.nextInt(CITY_HOUSE1, CITY_HOUSE4);
                 map.putThing(px + x, py + y, house);
-                x -= 15;
-            } while (x  > 10);
+                x -= house === CITY_HOUSE4 ? 5 : 8;
+            } while (x > 10);
         }
         flag = !flag;
     }
@@ -1743,10 +1762,8 @@ function buildNavigationMesh(map, vertices, triangles)
 }
 
 
-function planRoads(map, cities, updateProgress, percent, start)
+function planRoads(map, cities, updateProgress = false, percent = 0, start = now())
 {
-    const remaining = 100 - percent;
-
     const polygons = marchingSquares(map.things, map.size, map.size, t => t >= BLOCKED, true);
 
     updateProgress && updateProgress(0.8);
@@ -1810,6 +1827,7 @@ export default class WorldMap {
         this.tiles = tiles || new Uint8Array(arrayLen);
         this.things = things || new Uint8Array(arrayLen);
         this.sensors = new Map();
+        this.items = new Uint16Array(arrayLen);
 
         this.navMesh = navMesh || null;
         this.mask = mask || null;
@@ -1832,6 +1850,12 @@ export default class WorldMap {
     }
 
 
+    offset(x,y)
+    {
+        const { sizeMask, sizeBits } = this;
+        return ((y & sizeMask) << sizeBits) + (x & sizeMask);
+    }
+
 
     write(x, y, tile)
     {
@@ -1847,12 +1871,26 @@ export default class WorldMap {
     }
 
 
+    putItems(x, y, item, amount)
+    {
+        const { sizeMask, sizeBits } = this;
+        const off = ((y & sizeMask) << sizeBits) + (x & sizeMask);
+        this.items[off] = amount ? (item << 8) + amount : item > 256 ? item : (item << 8 + 1);
+    }
+
+    getItems(x, y)
+    {
+        const { sizeMask, sizeBits } = this;
+        const off = ((y & sizeMask) << sizeBits) + (x & sizeMask);
+        return this.items[off];
+    }
+
     registerSensor(x, y, sensor)
     {
         const { sizeMask, sizeBits } = this;
         const off = ((y & sizeMask) << sizeBits) + (x & sizeMask);
 
-        console.log("Register sensor", sensor, " for ", off);
+        //console.log("Register sensor", sensor, " for ", off);
         this.sensors.set(off, sensor);
     }
 
@@ -2033,7 +2071,12 @@ export default class WorldMap {
                         data[dataOffset++] = 17;
                         data[dataOffset++] = 17;
                         data[dataOffset++] = 255;
-
+                        break;
+                    case WOOD:
+                        data[dataOffset++] = 128;
+                        data[dataOffset++] = 64;
+                        data[dataOffset++] = 64;
+                        data[dataOffset++] = 255;
                         break;
                 }
 
@@ -2124,6 +2167,11 @@ export default class WorldMap {
         map.cities = cities;
 
         return map;
+    }
+
+    update()
+    {
+        planRoads(this, this.cities);
     }
 
     static generate(size, seed = new Date().getTime(), updateProgress)

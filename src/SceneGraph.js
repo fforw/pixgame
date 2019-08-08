@@ -175,8 +175,6 @@ class SceneGraph {
     {
         const { hasTicker, current } = this[secret];
         this.runEffects(delta);
-
-
         if (hasTicker)
         {
             current.ticker(delta);

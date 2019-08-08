@@ -1,3 +1,4 @@
+export const MESSAGE_CANCEL_PATH = "MESSAGE_CANCEL_PATH";
 export const QUERY_GENERATE = "QUERY_GENERATE";
 export const QUERY_PATH = "QUERY_PATH";
 
