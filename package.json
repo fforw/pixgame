@@ -5,10 +5,12 @@
     "license": "Apache-2.0",
     "private": true,
     "dependencies": {
+        "bit-twiddle": "^1.0.2",
         "classnames": "^2.2.6",
         "clone": "^2.1.2",
         "heap": "^0.2.6",
         "jiff": "^0.7.3",
+        "keymaster": "^1.6.2",
         "performance-now": "latest",
         "pixi.js": "^5.0.4",
         "prando": "^5.1.1",

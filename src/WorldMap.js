@@ -1,6 +1,7 @@
 import SimplexNoise from "simplex-noise"
 import Prando from "prando"
 import now from "performance-now"
+import { isPow2, log2 } from "bit-twiddle"
 import flood from "./flood";
 import marchingSquares from "./util/marchingSquares";
 import simplify from "./util/simplify";
@@ -1269,7 +1270,7 @@ export function polyMinMax(polygons)
 
 const xCoords = new Array(256);
 
-export function xOrFillPolygon(mask, polygon, sizeBits, minMax, minMaxOff)
+export function xorFillPolygon(mask, polygon, sizeBits, minMax, minMaxOff)
 {
     const minY = minMax[minMaxOff];
     const maxY = minMax[minMaxOff + 1];
@@ -1360,7 +1361,7 @@ function createMask(polygons, sizeBits, minMax)
     for (let i = 0; i < polygons.length; i++)
     {
         const polygon = polygons[i];
-        xOrFillPolygon(mask, polygon, sizeBits, minMax, i * 4 + 2);
+        xorFillPolygon(mask, polygon, sizeBits, minMax, i * 4 + 2);
     }
     return mask;
 }
@@ -1804,11 +1805,11 @@ export default class WorldMap {
     constructor(size = 800, seed, tiles, things, navMesh, mask, worldId)
     {
         this.worldId = worldId;
-        const sizeBits = Math.log(size) / Math.log(2);
-        if ((sizeBits % 1) !== 0)
+        if ( !isPow2(size))
         {
             throw new Error("Size must be power of two: " + size);
         }
+        const sizeBits = log2(size);
 
         //console.log("New map " + size + " x " + size + ", seed = " + seed);
 

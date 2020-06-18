@@ -6,7 +6,6 @@ import {
     THING_TEXTURES,
     WOOD
 } from "./config";
-import logger from "./util/logger";
 
 
 let layerMask;
@@ -236,9 +235,9 @@ function drawItems(ctx, map, vars)
     }
 
 }
-function drawThings(ctx, map, vars, posX, posY, mobiles, selectedMob)
+function drawThings(ctx, map, vars, posX, posY, mobiles)
 {
-    const { tileLayer, atlas } = ctx;
+    const { tileLayer, atlas, selectedMob } = ctx;
 
     const { widthInTiles, heightInTiles, screenX, screenY, mapX, mapY, xOffset, yOffset, halfWidth, halfHeight } = vars;
 
@@ -264,7 +263,7 @@ function drawThings(ctx, map, vars, posX, posY, mobiles, selectedMob)
         }
     }
 
-    let count = 0;
+    //let count = 0;
 
     for (let y = 0; y <= heightInTiles; y++)
     {
@@ -272,17 +271,18 @@ function drawThings(ctx, map, vars, posX, posY, mobiles, selectedMob)
         {
             for (let i = 0; i < mobiles.length; i++)
             {
-                const { y : my } = mobiles[i];
+                const mob = mobiles[i];
+                const { y : my } = mob;
 
                 if (((mapY + y) & sizeMask) === (((my >> 4) + 1) & sizeMask) && (my & 15) < 14)
                 {
-                    mobiles[i].draw(
+                    mob.draw(
                         (mapX << 4) + (xOffset & 15) + 40,
                         (mapY << 4) + (yOffset & 15) + 38,
-                        mobiles[i] === selectedMob
+                        selectedMob.has(mob.id - 1)
                     );
 
-                    count++;
+                    //count++;
                 }
 
             }
@@ -309,16 +309,17 @@ function drawThings(ctx, map, vars, posX, posY, mobiles, selectedMob)
         {
             for (let i = 0; i < mobiles.length; i++)
             {
-                const { y : my } = mobiles[i];
+                const mob = mobiles[i];
+                const { y : my } = mob;
 
                 if (((mapY + y) & sizeMask) === (((my >> 4) + 1) & sizeMask) && (my & 15) >= 14)
                 {
-                    mobiles[i].draw(
+                    mob.draw(
                         (mapX << 4) + (xOffset & 15) + 40,
                         (mapY << 4) + (yOffset & 15) + 38,
-                        mobiles[i] === selectedMob
+                        selectedMob.has(mob.id - 1)
                     );
-                    count++;
+                    //count++;
                 }
             }
         }
@@ -372,6 +373,40 @@ function sortByY(a,b)
 }
 
 
+function drawMovement(ctx, vars)
+{
+    const { tileLayer, atlas, collision } = ctx;
+
+    if (!collision)
+    {
+        return;
+    }
+
+    const {widthInTiles, heightInTiles, screenX, screenY, mapX, mapY} = vars;
+
+    for (let y = 0; y < heightInTiles; y++)
+    {
+        for (let x = 0; x < widthInTiles; x++)
+        {
+            const status = collision.lookup(mapX + x, mapY + y);
+            if (status)
+            {
+                const texture = status & 0x8000 ? "marker3.png" : "marker2.png";
+
+                const {pivot, frame} = atlas.frames[texture];
+
+                tileLayer.addFrame(
+                    texture,
+                    screenX + (x << 4) - ((pivot.x * frame.w) | 0) - 9,
+                    screenY + (y << 4) - ((pivot.y * frame.h) | 0) - 9
+                );
+            }
+        }
+    }
+
+}
+
+
 export default function drawTiles(ctx, map, posX, posY, mobiles)
 {
     const { tileLayer, width, height, maxFrameWidth, maxFrameHeight } = ctx;
@@ -418,15 +453,15 @@ export default function drawTiles(ctx, map, posX, posY, mobiles)
         )
     );
 
-    const selectedMob = mobiles[ctx.selectedMob];
 
     mobilesInView.sort(sortByY);
 
     //console.log("mobilesInView", mobilesInView && mobilesInView.length, mobiles.length);
     drawMarchingSquaresTiles(ctx, map, vars);
     drawNormalTiles(ctx, map, vars);
+    drawMovement(ctx, vars);
     drawItems(ctx, map, vars);
-    drawThings(ctx, map, vars, posX, posY, mobilesInView, selectedMob);
+    drawThings(ctx, map, vars, posX, posY, mobilesInView);
 
     //inViewLogger(mobilesInView.length)
 

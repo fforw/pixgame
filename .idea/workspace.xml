@@ -2,25 +2,28 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="dc0a362a-a522-4944-8286-e43e9094aabd" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/src/Collision.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/index-kontra.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/atlas/atlas-0.png" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/atlas-0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/atlas/src/meeple-ares.png" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/src/meeple-ares.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/atlas/src/meeple-athena.png" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/src/meeple-athena.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/atlas/src/meeple-demeter.png" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/src/meeple-demeter.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/atlas/src/meeple-worker.png" beforeDir="false" afterPath="$PROJECT_DIR$/atlas/src/meeple-worker.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Meeple.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/Meeple.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/assets/svg/meeple-ares.svg" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/svg/meeple-ares.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/WorldMap.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/WorldMap.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/assets/svg/meeple-athena.svg" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/svg/meeple-athena.svg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/assets/svg/meeple-demeter.svg" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/svg/meeple-demeter.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/assets/svg/meeple-worker.svg" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/svg/meeple-worker.svg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/config.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/drawTiles.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/drawTiles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index-delaunay.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index-stone.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index-xor.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/navigation.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/navigation.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/scenes/StartScene.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scenes/StartScene.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/skill-tree.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/skill-tree.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/stats.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/stats.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scenes/WorldScene.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scenes/WorldScene.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/webpack.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/webpack.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -92,6 +95,10 @@
   <component name="ProjectReloadState">
     <option name="STATE" value="0" />
   </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="FullScreen" value="false" />
@@ -106,7 +113,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="javascript.nodejs.core.library.configured.version" value="8.16.0" />
     <property name="js.last.introduce.type" value="CONST" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/test" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -123,12 +130,10 @@
     <property name="ts.external.directory.path" value="$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/test" />
-      <recent name="$PROJECT_DIR$/src/scenes" />
-      <recent name="$PROJECT_DIR$/tooling" />
-      <recent name="$PROJECT_DIR$/src" />
-      <recent name="$PROJECT_DIR$/src/workers" />
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/assets/svg" />
+      <recent name="$PROJECT_DIR$/src/util" />
+      <recent name="$PROJECT_DIR$/src/assets" />
     </key>
     <key name="es6.move.members.recent.items">
       <recent name="$PROJECT_DIR$/src/config.js" />
@@ -136,34 +141,24 @@
       <recent name="$PROJECT_DIR$/src/tilemap-config.js" />
       <recent name="$PROJECT_DIR$/src/WorldMap.js" />
     </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/assets/svg" />
-      <recent name="$PROJECT_DIR$/src/util" />
-      <recent name="$PROJECT_DIR$/src/assets" />
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/test" />
+      <recent name="$PROJECT_DIR$/src/scenes" />
+      <recent name="$PROJECT_DIR$/tooling" />
+      <recent name="$PROJECT_DIR$/src/workers" />
     </key>
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
-  <component name="RunManager" selected="Node.js.build-atlas.js">
-    <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
-      <Host>localhost</Host>
-      <Port>5050</Port>
-    </configuration>
+  <component name="RunManager" selected="Node.js.Collision.js">
     <configuration default="true" type="Applet">
       <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
+    </configuration>
+    <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
+      <Host>localhost</Host>
+      <Port>5050</Port>
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
@@ -180,6 +175,9 @@
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
+    </configuration>
+    <configuration name="Collision.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" node-parameters="-r @babel/register" path-to-js-file="Collision.js" working-dir="$PROJECT_DIR$/src">
+      <method v="2" />
     </configuration>
     <configuration default="true" type="TestNG">
       <option name="TEST_OBJECT" value="CLASS" />
@@ -295,9 +293,11 @@
       <item itemvalue="Mocha.Dice Rule Engine.evaluates RPN dice rules" />
       <item itemvalue="Node.js.build-atlas.js" />
       <item itemvalue="Node.js.fix-tilemap-constants.js" />
+      <item itemvalue="Node.js.Collision.js" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Node.js.Collision.js" />
         <item itemvalue="Mocha.Dice Rule Engine" />
         <item itemvalue="Mocha.Dice Rule Engine.evaluates RPN dice rules" />
         <item itemvalue="Mocha.Dice Rule Engine.calculates expected values of RPN dice rules" />
@@ -352,12 +352,22 @@
       <workItem from="1565085620128" duration="21527000" />
       <workItem from="1565171154813" duration="41177000" />
       <workItem from="1565228164592" duration="3665000" />
-      <workItem from="1565259444036" duration="2119000" />
+      <workItem from="1565259444036" duration="2732000" />
+      <workItem from="1565280872373" duration="2385000" />
+      <workItem from="1565290969198" duration="3156000" />
+      <workItem from="1565439919386" duration="10817000" />
+      <workItem from="1565519369465" duration="22553000" />
+      <workItem from="1565604181324" duration="46000" />
+      <workItem from="1565963425559" duration="7662000" />
+      <workItem from="1566038401414" duration="4070000" />
+      <workItem from="1566123572649" duration="1797000" />
+      <workItem from="1566214646023" duration="371000" />
+      <workItem from="1589630394034" duration="614000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="2" />
     <option name="includedJSSourcePackages">
       <set>
         <option value="prando" />
@@ -369,13 +379,12 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="Vcs.Log.UiProperties">
     <option name="RECENTLY_FILTERED_USER_GROUPS">

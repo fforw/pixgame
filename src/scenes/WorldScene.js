@@ -1,11 +1,15 @@
 import { Scene } from "../SceneGraph";
 import drawTiles from "../drawTiles";
-import Services from "../workers/Services";
-import { easeInCubic, easeInOutQuint, easeInQuint } from "../util/easing";
+import { easeInQuint } from "../util/easing";
 import Sensor, { SensorMode } from "../sensor";
-import { BLOCKED, DIRT, EMPTY, HOUSE, IGLOO, ITEM_WOOD, SAND, SMALL_TREE, SOIL, SOIL_2 } from "../config";
+import { BLOCKED, EMPTY, HOUSE, IGLOO, SOIL, SOIL_2 } from "../config";
 import Home from "./Home";
-import { restoreThing } from "../Meeple";
+
+export const tmpVacated = {
+    offsets: new Array(100),
+    count: 0
+};
+
 
 export const HOUSE_X = 1276;
 export const HOUSE_Y = 955;
@@ -140,7 +144,7 @@ class WorldScene extends Scene {
     {
 
         const { path, ctx } = this;
-        const { mobiles } = ctx;
+        const { mobiles, collision } = ctx;
         if(path)
         {
             let { pos, finePos, x, y, dx, dy } = this;
@@ -199,7 +203,7 @@ class WorldScene extends Scene {
 
             if (typeof mobile.ticker === "function")
             {
-                mobile.ticker(delta, tmpVacated);
+                mobile.ticker(delta);
             }
         }
 
@@ -208,7 +212,7 @@ class WorldScene extends Scene {
         {
             const x = tmpVacated.offsets[i];
             const y = tmpVacated.offsets[i + 1];
-            restoreThing(this.ctx.map, x, y)
+            collision.clear(x, y)
         }
     }
 
@@ -225,13 +229,6 @@ class WorldScene extends Scene {
         );
     }
 }
-
-const tmpVacated = {
-    offsets: new Array(100),
-    count: 0
-};
-
-const vacated = new Array()
 
 
 export default WorldScene

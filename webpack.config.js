@@ -22,8 +22,7 @@ module.exports = {
     entry: {
         "main": "./src/index.js",
         "height": "./src/index-height.js",
-        "local": "./src/index-local.js",
-        "stone": "./src/index-stone.js"
+        "kontra": "./src/index-kontra.js"
     },
 
     devtool: "source-map",
@@ -55,16 +54,9 @@ module.exports = {
 
         new HtmlWebpackPlugin({
             inject: "body",
-            chunks: ["vendors", "local"],
+            chunks: ["vendors", "kontra"],
             template: "src/template.html",
-            filename: "local.html"
-        }),
-
-        new HtmlWebpackPlugin({
-            inject: "body",
-            chunks: ["vendors", "stone"],
-            template: "src/template.html",
-            filename: "stone.html"
+            filename: "kontra.html"
         }),
 
         new MiniCssExtractPlugin({

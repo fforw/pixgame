@@ -1,0 +1,23 @@
+montage -background "#888" -geometry 16x16+8+8 \
+case-10-1.png \
+case-10-2.png \
+case-11.png \
+case-12.png \
+case-13.png \
+case-14.png \
+case-15.png \
+case-1.png \
+case-2.png \
+case-3.png \
+case-4.png \
+case-5-1.png \
+case-5-2.png \
+case-6.png \
+case-7.png \
+case-8.png \
+case-9.png \
+case-m1.png \
+case-m2.png \
+case-m3.png \
+case-m4.png \
+out.png

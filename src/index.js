@@ -1,9 +1,12 @@
-import * as PIXI from "pixi.js"
 import "./pixi-tilemap"
 import React from "react"
 import ReactDOM from "react-dom"
+import { Modal, ModalBody, ModalHeader } from "reactstrap"
+import key from "keymaster"
+
 // noinspection ES6UnusedImports
 import STYLES from "./style.css"
+
 import SceneGraph from "./SceneGraph";
 import WorldScene from "./scenes/WorldScene"
 import StartScene from "./scenes/StartScene"
@@ -12,13 +15,17 @@ import { getCurrentLayerMask } from "./drawTiles"
 import CanvasWrapper from "./CanvasWrapper"
 import MapWidget from "./MapWidget"
 
-import { Modal, ModalBody, ModalHeader } from "reactstrap"
 import Home from "./scenes/Home";
 import City from "./scenes/City";
 import InfoBox from "./InfoBox";
 import Services from "./workers/Services";
 import { DARK } from "./config";
+import { findMultipleWalkable } from "./Meeple";
 
+function mod(n, m)
+{
+    return ((n % m) + m) % m;
+}
 
 function determineScale(width)
 {
@@ -135,10 +142,10 @@ const ctx = {
     maxFrameHeight: 0,
 
     mobiles: [],
-    selectedMob: -1,
+    selectedMob: new Set(),
 
-    services: Services
-
+    services: Services,
+    collision: null
 };
 
 let interactionSensor;
@@ -312,11 +319,23 @@ function toggleShowMap()
 }
 
 
+export function lastEntry(selectedMob)
+{
+    let value = null;
+    for (let curr of selectedMob)
+    {
+        value = curr;
+    }
+    return value;
+}
+
+
 export function renderReact()
 {
     return new Promise((resolve, reject) => {
         try
         {
+            const selectedMob = ctx.selectedMob;
             ReactDOM.render(
                 <React.Fragment>
                     <CanvasWrapper
@@ -365,7 +384,7 @@ export function renderReact()
                             />
                         </ModalBody>
                     </Modal>
-                    <InfoBox mob={ ctx.selectedMob >= 0 && ctx.mobiles[ctx.selectedMob] }/>
+                    <InfoBox mob={ selectedMob.size && ctx.mobiles[lastEntry(selectedMob)] }/>
                 </React.Fragment>,
                 document.getElementById("root"),
                 resolve
@@ -430,6 +449,52 @@ function isInUI(ev)
 }
 
 
+function selectMob(delta, addToSelection = false)
+{
+    if (ctx.selectedMob.size)
+    {
+        const lastValue = lastEntry(ctx.selectedMob);
+
+        !addToSelection && ctx.selectedMob.clear();
+        ctx.selectedMob.add(mod(lastValue + delta, ctx.mobiles.length));
+    }
+    else
+    {
+        ctx.selectedMob.add(mod(delta, ctx.mobiles.length));
+    }
+}
+
+
+function updateControls()
+{
+    if (key.isPressed("w") || key.isPressed("up"))
+    {
+        ctx.controls.moveUpDown = -1;
+    }
+    else if (key.isPressed("s") || key.isPressed("down"))
+    {
+        ctx.controls.moveUpDown = 1;
+    }
+    else
+    {
+        ctx.controls.moveUpDown = 0;
+    }
+
+    if (key.isPressed("a") || key.isPressed("left"))
+    {
+        ctx.controls.moveLeftRight = -1;
+    }
+    else if (key.isPressed("d") || key.isPressed("right"))
+    {
+        ctx.controls.moveLeftRight = 1;
+    }
+    else
+    {
+        ctx.controls.moveLeftRight = 0;
+    }
+}
+
+
 function setup(loader, resources)
 {
     const atlas = resources["atlas/atlas-0.json"].data;
@@ -489,132 +554,95 @@ function setup(loader, resources)
     ], ctx);
 
     app.ticker.add((delta) => {
-
         if (!paused && !showMap)
         {
+            updateControls();
+
             handleMovement(delta);
             sceneGraph.ticker(delta);
         }
     });
 
-    window.addEventListener("keydown", ev => {
-        const keyCode = ev.keyCode;
+    key(",", () => {
+        selectMob(-1);
 
-        switch(keyCode)
+        const lastSelected = lastEntry(ctx.selectedMob);
+        const mob = ctx.mobiles[lastSelected];
+        console.log("selectedMob", ctx.selectedMob, "lastSelected", mob);
+        ctx.posX = mob.x;
+        ctx.posY = mob.y;
+
+        renderReact();
+    });
+    key("shift+,", () => {
+        selectMob(-1, true);
+
+
+        const lastSelected = lastEntry(ctx.selectedMob);
+        const mob = ctx.mobiles[lastSelected];
+        console.log("selectedMob", ctx.selectedMob, "lastSelected", mob);
+        ctx.posX = mob.x;
+        ctx.posY = mob.y;
+
+        renderReact();
+    });
+
+    key(".", () => {
+
+        selectMob(1);
+
+        const lastSelected = lastEntry(ctx.selectedMob);
+        const mob = ctx.mobiles[lastSelected];
+        console.log("selectedMob", ctx.selectedMob, "lastSelected", mob);
+
+        ctx.posX = mob.x;
+        ctx.posY = mob.y;
+        renderReact();
+    });
+    key("shift+.", () => {
+
+        selectMob(1, true);
+
+        const lastSelected = lastEntry(ctx.selectedMob);
+        const mob = ctx.mobiles[lastSelected];
+        console.log("selectedMob", ctx.selectedMob, "lastSelected", mob);
+
+        ctx.posX = mob.x;
+        ctx.posY = mob.y;
+        renderReact();
+    });
+
+    key("m", () => {
+        if (!paused || showMap)
         {
-            case 188:
-                ctx.selectedMob--;
-                if (ctx.selectedMob < 0)
-                {
-                    ctx.selectedMob = ctx.mobiles.length - 1;
-                }
-
-                console.log("selectedMob", ctx.selectedMob);
-                
-                ctx.posX = ctx.mobiles[ctx.selectedMob].x;
-                ctx.posY = ctx.mobiles[ctx.selectedMob].y;
-
-                renderReact();
-                break;
-            case 190:
-                ctx.selectedMob++;
-                if (ctx.selectedMob >= ctx.mobiles.length || ctx.selectedMob < 0)
-                {
-                    ctx.selectedMob = 0;
-                }
-
-                console.log("selectedMob", ctx.selectedMob);
-
-                ctx.posX = ctx.mobiles[ctx.selectedMob].x;
-                ctx.posY = ctx.mobiles[ctx.selectedMob].y;
-                renderReact();
-                break;
-
-            case 13:
-                // if (interactionSensor)
-                // {
-                //     interactionSensor.action(interactionSensorX, interactionSensorY);
-                // }
-                break;
-            case 49:
-                ctx.scale = determineScale(Math.max(window.innerWidth, window.innerHeight));
-
-                break;
-            // map
-            case 77:
-                if (!paused || showMap)
-                {
-                    toggleShowMap();
-                }
-                break;
-            // P
-            case 27:
-            case 80:
-                console.log("POS", (ctx.posX >> 4)|0, (ctx.posY >> 4)|0, ", fine = ", ctx.posX, ctx.posY, ", layerMask = ", getCurrentLayerMask())
-
-                if (ctx.selectedMob >= 0)
-                {
-                    ctx.selectedMob = -1;
-                    renderReact();
-                }
-                else
-                {
-                    togglePause();
-                }
-                break;
-            case 36:
-                ctx.posX = POS_X;
-                ctx.posY = POS_Y;
-                break;
-            case 35:
-                ctx.posX = 0;
-                ctx.posY = 0;
-                break;
-            case 38:
-            case 87:
-                ctx.controls.moveUpDown = -1;
-                break;
-            case 37:
-            case 65:
-                ctx.controls.moveLeftRight = -1;
-                break;
-            case 40:
-            case 83:
-                ctx.controls.moveUpDown = 1;
-                break;
-            case 39:
-            case 68:
-                ctx.controls.moveLeftRight = 1;
-                break;
-            default:
-                console.log("keyCode = ", keyCode);
+            toggleShowMap();
         }
-    }, true);
-    window.addEventListener("keyup", ev => {
-        const keyCode = ev.keyCode;
+    });
 
-        //console.log("keyCode = ", keyCode);
+    key("p", () => {
+        console.log("POS", (ctx.posX >> 4)|0, (ctx.posY >> 4)|0, ", fine = ", ctx.posX, ctx.posY, ", layerMask = ", getCurrentLayerMask())
 
-
-
-        switch(keyCode)
+        if (ctx.selectedMob.size)
         {
-            case 38:
-            case 87:
-            case 40:
-            case 83:
-                ctx.controls.moveUpDown = 0;
-                ctx.blocked = false;
-                break;
-            case 37:
-            case 65:
-            case 39:
-            case 68:
-                ctx.controls.moveLeftRight = 0;
-                ctx.blocked = false;
-                break;
+            ctx.selectedMob.clear();
+            renderReact();
         }
-    }, true);
+        else
+        {
+            togglePause();
+        }
+    });
+
+    key("home", () => {
+        ctx.posX = POS_X;
+        ctx.posY = POS_Y;
+    });
+
+    key("end", () => {
+        ctx.posX = 0;
+        ctx.posY = 0;
+    });
+
 
     window.addEventListener("resize", ev => {
 
@@ -634,11 +662,18 @@ function setup(loader, resources)
             return;
         }
 
+
         const rect = ctx.app.view.getBoundingClientRect();
         const halfWidth = ctx.width >> 1;
         const halfHeight = ctx.height >> 1;
         const x = ctx.posX - halfWidth  + (ev.clientX - rect.left)/ctx.scale;
         const y = ctx.posY - halfHeight + (ev.clientY - rect.top)/ctx.scale;
+
+        if (ev.shiftKey)
+        {
+            console.log("SHIFT-CLICK", x, y)
+            return;
+        }
 
         // console.log("x: " + mapX + " y: " + mapY, "ev =", x, y);
         // ctx.map.write(mapX, mapY, DARK);
@@ -649,13 +684,25 @@ function setup(loader, resources)
         // //     interactionSensor.action(interactionSensorX, interactionSensorY);
         // // }
         //
-        if (ctx.selectedMob >= 0)
+
+        const { collision } = ctx;
+        const { size } = ctx.selectedMob;
+        const { sizeMask, sizeBits } = collision;
+
+        if (size)
         {
-            const mobile = ctx.mobiles[ctx.selectedMob];
-            console.log("Move ", mobile.name, " from", mobile.x >> 4, mobile.y >> 4, " to ", x >> 4, y >> 4, "obj = ", mobile);
-            mobile.moveTo(x, y);
-            // ctx.mobiles[ctx.selectedMob + 1].moveTo(x,y);
-            // ctx.mobiles[ctx.selectedMob + 2].moveTo(x,y);
+            const offsets = findMultipleWalkable(ctx.collision, x, y, size);
+
+            let pos = 0;
+            for (let index of ctx.selectedMob)
+            {
+                const offset = offsets[pos++];
+                const mobile = ctx.mobiles[index];
+                const px = offset & sizeMask;
+                const py = y >> sizeBits;
+                console.log("Move ", mobile.name, " from", mobile.x >> 4, mobile.y >> 4, " to ", px , py , "obj = ", mobile);
+                mobile.moveTo(px, py);
+            }
         }
 
     }, true);

@@ -1,4 +1,4 @@
-import { BLOCKED, ITEM_SWORD, ITEM_TEXTURES, OCCUPIED, OCCUPIED_MOVING, RIVER, SAND } from "./config";
+import { BLOCKED, ITEM_SWORD, ITEM_TEXTURES, RIVER, SAND } from "./config";
 import { createStats } from "./stats.js"
 import SkillTree, {
     BLESSED_BY_ARES,
@@ -10,6 +10,8 @@ import SkillTree, {
 import { evaluateRule } from "./rule/diceRule";
 import generate from "./util/name-generator";
 import wait from "./util/wait";
+import { tmpVacated } from "./scenes/WorldScene";
+import { MOVING, STATIC } from "./Collision";
 
 
 const BODY_TYPES = [
@@ -51,6 +53,8 @@ const OUTLINE = "meeple-outline.png";
 const MIN_ACCELERATION = 0.5;
 const MAX_ACCELERATION = 1.5;
 const SPEED_LIMIT = 15;
+
+const MEEPLE_WORKER = "meeple-worker.png";
 
 function collectSkills(meeple, skills, name)
 {
@@ -198,70 +202,137 @@ function calculateAcceleration(stats)
     return MIN_ACCELERATION + speed * (MAX_ACCELERATION - MIN_ACCELERATION);
 }
 
+function findWalkable(collision, x, y, maxSteps = 1000)
+{
+    const { sizeMask, sizeBits } = collision;
+
+    let status = collision.lookup(x,y);
+    if (!status)
+    {
+        return (y << sizeBits) + x;
+    }
+
+    let dx = 1;
+    let dy = 0;
+    let steps = 1;
+
+    while (true)
+    {
+        for (let i=0; i < 2; i++)
+        {
+            for (let j =0; j < steps; j++)
+            {
+                x += dx;
+                y += dy;
+
+                //console.log("CHECK", x, y);
+
+                status = collision.lookup(x,y);
+                if (!status)
+                {
+                    return (y << sizeBits) + x;
+                }
+            }
+
+            // rotate 90 degrees clockwise
+            let tmp = dx;
+            dx = -dy;
+            dy = tmp;
+
+            if (--maxSteps === 0)
+            {
+                return -1;
+            }
+        }
+        steps++;
+    }
+}
+
+export function findMultipleWalkable(collision, x, y, count = 1, maxSteps = 1000)
+{
+
+    const offsets = [];
+    const { sizeMask, sizeBits } = collision;
+
+    let status = collision.lookup(x,y);
+    if (!status)
+    {
+        offsets.push((y << sizeBits) + x);
+        if (offsets.length === count)
+        {
+            return offsets;
+        }
+    }
+
+    let dx = 1;
+    let dy = 0;
+    let steps = 1;
+
+    while (true)
+    {
+        for (let i=0; i < 2; i++)
+        {
+            for (let j =0; j < steps; j++)
+            {
+                x += dx;
+                y += dy;
+
+                //console.log("CHECK", x, y);
+
+                status = collision.lookup(x,y);
+                if (!status)
+                {
+                    offsets.push((y << sizeBits) + x);
+                    if (offsets.length === count)
+                    {
+                        return offsets;
+                    }
+                }
+            }
+
+            // rotate 90 degrees clockwise
+            let tmp = dx;
+            dx = -dy;
+            dy = tmp;
+
+            if (--maxSteps === 0)
+            {
+                throw new Error("Haven't found " + count + " walkable tiles");
+            }
+        }
+        steps++;
+    }
+}
+
+
 function startMoving(meeple)
 {
-    const { ctx } = meeple;
-
-    restoreThing(ctx.map, meeple.x >> 4, meeple.y >> 4);
+    const { collision } = meeple.ctx;
+    collision.clear(meeple.x >> 4, meeple.y >> 4);
     meeple.moving = true;
 }
 
 function stopMoving(meeple)
 {
-    const { ctx } = meeple;
+    const { collision } = meeple.ctx;
 
-    saveThing(ctx.map, meeple.x >> 4, meeple.y >> 4);
-    ctx.map.putThing(meeple.x >> 4, meeple.y >> 4, OCCUPIED);
+    collision.register(meeple.id, meeple.x >> 4, meeple.y >> 4, false);
     meeple.moving = false;
 }
 
 
-/**
- * Shadow things map temporary keeping things for save-keeping while mobs move around.
- */
-let shadow = null;
 
-
-function saveThing(map, x, y)
-{
-    const thing = map.getThing(x,y);
-
-    if (thing !== OCCUPIED && thing !== OCCUPIED_MOVING)
-    {
-        shadow[map.offset(x,y)] = thing;
-    }
-}
-
-export function restoreThing(map, x, y)
-{
-    map.putThing(x,y, shadow[map.offset(x,y)]);
-}
-
-
-function ensureShadow(map)
-{
-    if (!shadow || shadow.length < map.things.length)
-    {
-        shadow = new Uint8Array(map.things.length)
-    }
-    return shadow;
-}
 
 
 class Meeple {
-    constructor(random, x, y, ctx)
+    constructor(random, ctx, id)
     {
-        this.x = x;
-        this.y = y;
         this.ctx = ctx;
         this.random = random;
+        this.id = id;
 
         const stats = createStats(random);
         this.updateStats(stats);
-
-        ensureShadow(ctx.map);
-        saveThing(ctx.map,x >> 4,y >> 4);
-        ctx.map.putThing(x >> 4, y >> 4, OCCUPIED);
 
         this.name = generate(random, random.nextInt(3, 6));
 
@@ -269,6 +340,8 @@ class Meeple {
         this.hp = this.hpMax;
         this.gold = random.nextInt(900, 1200);
 
+        this.x = 0;
+        this.y = 0;
         this.dx = 0;
         this.dy = 0;
         this.moveX = 0;
@@ -291,13 +364,27 @@ class Meeple {
         this.targetY = 0;
         this.distanceToTarget = 0;
         this.delay = 0;
-        this.wasBlocked = false;
         this.uniform = null;
         this.notFound = 0;
 
         this.skills = getSkills(this);
     }
 
+    place(x,y)
+    {
+        const { collision } = this.ctx;
+
+        if (this.placed)
+        {
+            collision.clear(this.x >> 4, this.y >> 4);
+        }
+
+        this.x = x;
+        this.y = y;
+
+        collision.register(this.id, this.x >> 4, this.y >> 4, STATIC);
+        this.placed = true;
+    }
 
     draw(posX, posY, highlight = false)
     {
@@ -318,7 +405,7 @@ class Meeple {
             y - posY - pivot.y * frame.h | 0
         );
 
-        if (uniform && uniform !== "meeple-worker.png")
+        if (uniform && uniform !== MEEPLE_WORKER)
         {
             ({pivot, frame} = atlas.frames[uniform]);
             tileLayer.addFrame(
@@ -355,7 +442,7 @@ class Meeple {
             );
         }
 
-        if (uniform === "meeple-worker.png")
+        if (uniform === MEEPLE_WORKER)
         {
             ({pivot, frame} = atlas.frames[uniform]);
             tileLayer.addFrame(
@@ -379,7 +466,7 @@ class Meeple {
     }
 
 
-    ticker(delta, vacated)
+    ticker(delta)
     {
         if (this.delay > 0)
         {
@@ -387,8 +474,8 @@ class Meeple {
             return;
         }
 
-        const { x, y, ctx, currentPath, stats, morePathsPending, moving} = this;
-        const { map, posX, posY } = ctx;
+        const { x, y, ctx, currentPath, stats, moving} = this;
+        const { map, posX, posY, collision } = ctx;
         let { currentPathPos } = this;
 
         getSelectedPathGraphics(ctx).position.set(
@@ -397,85 +484,56 @@ class Meeple {
         );
 
 
-        const isMovementBlocked = (x, y, nextX, nextY, canStopIfBlocked) =>
+        const isMovementBlocked = (x, y, nextX, nextY, ignoreMinorCollision) =>
         {
             const fx = x & 15;
             const fy = y & 15;
 
-            if (fx < 4 || fx >= 12 || fy < 4 || fy >= 12)
-            {
-                return false;
-            }
             const currentMapX = x >> 4;
             const currentMapY = y >> 4;
             const nextMapX = nextX >> 4;
             const nextMapY = nextY >> 4;
 
-            const currentThing = map.getThing(nextMapX, nextMapY);
-            if (currentThing >= BLOCKED)
+            const status = collision.lookup(nextMapX, nextMapY);
+            if (status)
             {
-                if (currentThing === OCCUPIED_MOVING)
+                if (collision.getStatus(status) === MOVING)
                 {
                     // just do nothing and wait for the other guy to move
-                    //console.log("WAIT ", this.name);
+                    console.log(this.name + ": wait for", nextMapX, nextMapY);
 
-                    map.putThing(currentMapX, currentMapY, OCCUPIED);
+                    collision.register(this.id, currentMapX, currentMapY, STATIC);
                     this.dx = 0;
                     this.dy = 0;
-                    this.delay = 20;
+                    this.delay = 25;
                     return true;
                 }
 
-                //console.log("BLOCKED ", this.name, " at", this.x >> 4, this.y >> 4, canStopIfBlocked ? " Done" : " Restarting");
-                if (!canStopIfBlocked)
+                // disregard  collision if just brushing the border region
+                if (ignoreMinorCollision && (fx < 4 || fx >= 12) && (fy < 4 || fy >= 12))
                 {
-                    this.x -= this.dx * delta;
-                    this.y -= this.dy * delta;
-                    this.dx = 0;
-                    this.dy = 0;
-
-                    // //this.delay = 30;
-                    //
-                    // let evadeX = 16;
-                    // let evadeY = 0;
-                    //
-                    // for (let i=0; i < 3; i++)
-                    // {
-                    //     const tmp = evadeX;
-                    //     evadeX = -evadeY;
-                    //     evadeY = tmp;
-                    //
-                    //     if (map.getThing((this.x  + evadeX >> 4), (this.y + evadeY >> 4)) < BLOCKED)
-                    //     {
-                    //         break;
-                    //     }
-                    // }
-                    //
-                    // this.startX = this.x;
-                    // this.startY = this.y;
-                    // this.targetX = this.x + evadeX;
-                    // this.targetY = this.y + evadeY;
-                    //
-                    // const dx = this.targetX - x;
-                    // const dy = this.targetY - y;
-                    //
-                    // this.distanceToTarget = Math.sqrt(dx * dx + dy * dy);
-                    //
-                    // const factor = stats.acceleration / this.distanceToTarget;
-                    // this.moveX = dx * factor;
-                    // this.moveY = dy * factor;
-                    //
-                    //this.wasBlocked = true;
-
-                    this.moveTo(this.endTargetX, this.endTargetY);
-                    return true;
-                }
-                else
-                {
-                    // abort current movement
-                    stopMoving(this);
+                    return false;
                 }
 
+                console.log(this.name + ": blocked at", this.x >> 4, this.y >> 4);
+
+                this.x -= this.dx * delta * 2;
+                this.y -= this.dy * delta * 2;
+                this.dx = 0;
+                this.dy = 0;
+
+                const offset = findWalkable(collision, this.endMapX, this.endMapY);
+
+                const endX = (offset & map.sizeMask);
+                const endY = (offset >> map.sizeBits);
+
+                console.log(this.name + ": revised end position from ", this.endMapX, this.endMapY, " to ", endX, endY);
+
+                this.endMapX = endX;
+                this.endMapY = endY;
+
+                stopMoving(this);
+                this.moveTo(endX << 4, endY << 4);
                 return true;
             }
             return false;
@@ -498,7 +556,7 @@ class Meeple {
                 // {
                 //     stopMoving(this);
                 //     this.wasBlocked = false;
-                //     this.moveTo(this.endTargetX, this.endTargetY);
+                //     this.moveTo(this.endMapX, this.endMapY);
                 // }
                 //
                 if (currentPathPos >= currentPath.length)
@@ -509,12 +567,15 @@ class Meeple {
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     if (distance < 3)
                     {
-                        if (isMovementBlocked(this.x, this.y, this.targetX, this.targetY, false))
+                        const result = isMovementBlocked(this.x, this.y, this.targetX, this.targetY, false);
+                        //console.log(`isMovementBlocked(${this.x >> 4}, ${this.y >> 4}, ${this.targetX >> 4}, ${this.targetY >> 4}, false) => ${result}`);
+                        if (result)
                         {
                             return;
                         }
 
-                        restoreThing(map,this.x >> 4, this.y >> 4);
+                        tmpVacated.offsets[tmpVacated.count++] = this.x >> 4;
+                        tmpVacated.offsets[tmpVacated.count++] = this.y >> 4;
 
                         // we're there
                         this.x = this.targetX;
@@ -522,7 +583,7 @@ class Meeple {
                         this.dx = 0;
                         this.dy = 0;
 
-                        //console.log("STOP ", this.name, " at", this.x >> 4, this.y >> 4);
+                        console.log(this.name + ": stop at", this.x >> 4, this.y >> 4);
                         stopMoving(this);
 
                         return;
@@ -537,7 +598,7 @@ class Meeple {
                 else
                 {
                     this.targetX = (currentPath[currentPathPos++] << 4);
-                    this.targetY = (currentPath[currentPathPos++] << 4) - 4;
+                    this.targetY = (currentPath[currentPathPos++] << 4);
                 }
 
                 //console.log(`Moving from ${this.x >> 4}, ${this.y >> 4}  to  ${this.targetX >> 4}, ${this.targetY >> 4}`, currentPathPos);
@@ -580,19 +641,18 @@ class Meeple {
 
             if (currentMapX !== nextMapX || currentMapY !== nextMapY)
             {
-                if (isMovementBlocked(x, y, nextX, nextY, false))
+                if (isMovementBlocked(x, y, nextX, nextY, true))
                 {
-                    return
+                    return;
                 }
 
-                vacated.offsets[vacated.count++] = currentMapX;
-                vacated.offsets[vacated.count++] = currentMapY;
-                map.putThing(nextMapX, nextMapY, OCCUPIED_MOVING);
+                tmpVacated.offsets[tmpVacated.count++] = currentMapX;
+                tmpVacated.offsets[tmpVacated.count++] = currentMapY;
+                collision.register(this.id, nextMapX, nextMapY, MOVING);
             }
 
             this.x = nextX;
             this.y = nextY;
-
         }
     }
 
@@ -617,7 +677,7 @@ class Meeple {
         {
             // let's get started..
             this.targetX = (this.currentPath[2] << 4);
-            this.targetY = (this.currentPath[3] << 4) - 4;
+            this.targetY = (this.currentPath[3] << 4);
 
             //console.log(`Start moving from ${this.x >> 4}, ${this.y >> 4}  to  ${this.targetX >> 4}, ${this.targetY >> 4}`);
 
@@ -631,11 +691,10 @@ class Meeple {
             this.moveY = dy * factor;
 
             this.currentPathPos = 4;
-            this.endTargetX = targetX;
-            this.endTargetY = targetY;
+            this.endMapX = this.currentPath[this.currentPath.length - 2];
+            this.endMapY = this.currentPath[this.currentPath.length - 1];
 
             this.morePathsPending = true;
-
 
 
             startMoving(this);
@@ -666,8 +725,8 @@ class Meeple {
             ctx.map.worldId,
             startX >> 4,
             startY >> 4,
-            ((targetX & fineMask) >> 4) & sizeMask,
-            ((targetY - 4 & fineMask) >> 4) & sizeMask,
+            ((targetX & fineMask) >> 4) + 1 & sizeMask,
+            ((targetY - 4 & fineMask) >> 4) + 1 & sizeMask,
             segment => {
                 const wasEmpty = !this.currentPath.length;
 
@@ -689,7 +748,7 @@ class Meeple {
 
             if (msg.path === null)
             {
-                console.log("No path found");
+                console.log(this.name + ": No path found");
                 stopMoving(this);
 
                 this.notFound++;
@@ -697,7 +756,7 @@ class Meeple {
                 {
                     wait(300).then(() => {
 
-                        console.log("Retrying...");
+                        console.log(this.name + ": Retrying...");
                         return moveTo(targetX, targetY);
                     });
                 }
@@ -706,7 +765,7 @@ class Meeple {
             }
             else if (msg.path === false)
             {
-                console.log("aborted");
+                console.log(this.name + ": aborted");
                 stopMoving(this);
                 return;
             }
@@ -734,11 +793,6 @@ class Meeple {
 
         this.stats = stats;
     }
-}
-
-function getShadow()
-{
-    return shadow;
 }
 
 export default Meeple

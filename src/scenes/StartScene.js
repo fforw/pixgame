@@ -1,30 +1,28 @@
 import { Scene } from "../SceneGraph";
 import WorldMap, { fillThings, fillTiles, TAU } from "../WorldMap";
 import Services from "../workers/Services";
-import WorldScene, { START_X, START_Y } from "./WorldScene";
+import WorldScene from "./WorldScene";
 import { drawDigit } from "../util/drawDigit";
 import drawTiles from "../drawTiles";
 import {
     BLOCKED,
     CASTLE_GATE,
-    DARK,
-    DOT,
     EMPTY,
     GRASS,
     ITEM_AXE,
     ITEM_HOE,
     ITEM_PICKAXE,
-    ITEM_SHOVEL, ITEM_SWORD, ITEM_WOOD,
-    SAND
+    ITEM_SHOVEL,
+    ITEM_SWORD,
+    ITEM_WOOD
 } from "../config";
-import Sensor, { SensorMode, SensorPlaceholder } from "../sensor";
+import Sensor, { SensorMode } from "../sensor";
 import City from "./City";
-import Meeple, { GUILDS, GUILD_UNIFORMS, SECONDARY_STAT } from "../Meeple";
+import Meeple, { GUILD_UNIFORMS, GUILDS, SECONDARY_STAT } from "../Meeple";
 import Prando from "prando";
-import now from "performance-now";
 import { renderReact } from "../index";
-import wait from "../util/wait";
 import { GUILD_OF_ARES, GUILD_OF_ATHENA, GUILD_OF_DEMETER } from "../skill-tree";
+import Collision from "../Collision";
 
 
 function enterCastle(ctx, x, y)
@@ -114,58 +112,6 @@ function registerTileSensors(map, ctx)
 }
 
 
-function createMeeple(random, x, y, ctx, targets, count)
-{
-    const meeple = new Meeple(
-        random,
-        x,
-        y,
-        ctx
-    );
-
-    // wait(random.nextInt(count * 100))
-    //     .then(() => {
-    //
-    //         for (let name of GUILDS.keys())
-    //         {
-    //             if (meeple.skills.has(name))
-    //             {
-    //                 const target = targets[name];
-    //                 let targetX;
-    //                 let targetY;
-    //                 do
-    //                 {
-    //                     targetX = target[0] + random.nextInt(-80, 80);
-    //                     targetY = target[1] + random.nextInt(-80, 80);
-    //                 } while(ctx.map.getThing(targetX >> 4, targetY >> 4) >= BLOCKED);
-    //
-    //                 meeple.moveTo(
-    //                     targetX,
-    //                     targetY
-    //                 );
-    //                 return;
-    //             }
-    //         }
-    //         const target = targets.none;
-    //         let targetX;
-    //         let targetY;
-    //         do
-    //         {
-    //             targetX = target[0] + random.nextInt(-50, 50);
-    //             targetY = target[1] + random.nextInt(-50, 50);
-    //         } while(ctx.map.getThing(targetX >> 4, targetY >> 4) >= BLOCKED);
-    //
-    //         meeple.moveTo(
-    //             targetX,
-    //             targetY
-    //         );
-    //
-    //     });
-
-    return meeple;
-}
-
-
 function arrangeInSquare(meeples, cx, cy)
 {
     const size = Math.ceil(Math.sqrt(meeples.length));
@@ -180,8 +126,10 @@ function arrangeInSquare(meeples, cx, cy)
         {
             if (off < meeples.length)
             {
-                meeples[off].x = cx + x * 48;
-                meeples[off].y = cy + y * 48;
+                meeples[off].place(
+                    ((cx + x * 48) & ~15),
+                    ((cy + y * 48) & ~15)
+                );
                 off++;
             }
             else
@@ -224,6 +172,7 @@ class StartScene extends Scene
 
                 this.ctx.worldMap = generatedMap;
                 this.ctx.map = generatedMap;
+                this.ctx.collision = new Collision(generatedMap);
 
                 registerTileSensors(generatedMap, this.ctx);
 
@@ -236,6 +185,7 @@ class StartScene extends Scene
 
                 fillTiles(generatedMap, posX - 4, posY - 4, groupSize + 8, groupSize + 8, GRASS);
                 fillThings(generatedMap, posX - 40, posY - 40, groupSize + 80, groupSize + 80, 0);
+                this.ctx.collision.updateFromMap(generatedMap);
 
 
                 const cx = (posX + (groupSize >> 1)) << 4;
@@ -271,13 +221,10 @@ class StartScene extends Scene
                     for (let x = 0; x < 8; x++)
                     {
                         mobiles.push(
-                            createMeeple(
+                            new Meeple(
                                 random,
-                            posX * 16 + x * 48,
-                            posY * 16 + y * 48,
                                 this.ctx,
-                                targets,
-                                count++
+                                ++count
                             )
                         );
 
